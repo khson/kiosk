@@ -1,0 +1,11 @@
+{
+  "name": "꼬마식당 키오스크",
+  "short_name": "꼬마식당",
+  "lang": "ko",
+  "start_url": "./index.html",
+  "display": "fullscreen",
+  "orientation": "any",
+  "background_color": "#EDF2F7",
+  "theme_color": "#E3432B",
+  "icons": [{ "src": "icon.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "any" }]
+}

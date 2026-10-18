@@ -1,0 +1,1336 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
+<!-- ARTIFACT-START -->
+<title>꼬마식당 키오스크</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="꼬마식당">
+<meta name="theme-color" content="#E3432B">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" href="icon.svg" type="image/svg+xml">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Jua&family=Gowun+Dodum&display=swap">
+<style>
+/* Layout: 한 화면 키오스크 — 위에 큼직한 음식 종류 탭, 가운데 메뉴판, 오른쪽 주문 쟁반(좁은 화면에선 아래 주문 바) */
+:root {
+  --bg: #EDF2F7;
+  --surface: #FFFFFF;
+  --surface-2: #F5F7FB;
+  --ink: #1D2440;
+  --muted: #5B6584;
+  --line: #D5DDE9;
+  --ketchup: #E3432B;
+  --ketchup-deep: #B32D19;
+  --on-ketchup: #FFFFFF;
+  --mustard: #F5B82A;
+  --on-mustard: #3A2A00;
+  --mint: #17946E;
+  --mint-deep: #0F6E51;
+  --on-mint: #FFFFFF;
+  --scrim: rgba(18, 23, 42, .55);
+  --shadow: 0 2px 0 rgba(29, 36, 64, .06), 0 10px 24px rgba(29, 36, 64, .08);
+  --c-korean: #E3432B;
+  --c-chinese: #E8701A;
+  --c-japanese: #2F7FD8;
+  --c-western: #2E9E5B;
+  --c-snack: #DA3F78;
+  --c-drink: #1597A4;
+  --c-dessert: #8A5CD6;
+  --font-display: "Jua", "Apple SD Gothic Neo", "Malgun Gothic", "Noto Sans KR", sans-serif;
+  --font-body: "Gowun Dodum", "Apple SD Gothic Neo", "Malgun Gothic", "Noto Sans KR", sans-serif;
+  --r-lg: 24px;
+  --r-md: 16px;
+  padding-top: env(safe-area-inset-top, 0px);
+  padding-bottom: env(safe-area-inset-bottom, 0px);
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #12172A; --surface: #1B2240; --surface-2: #232B4D; --ink: #EEF1FA; --muted: #A4ADCA; --line: #313A5C;
+    --ketchup: #F2553B; --ketchup-deep: #A9301C; --mustard: #FFC64D; --mint: #2DB88B; --mint-deep: #1A7E5E;
+    --scrim: rgba(4, 6, 14, .7); --shadow: 0 2px 0 rgba(0, 0, 0, .25), 0 10px 24px rgba(0, 0, 0, .3);
+    color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --bg: #12172A; --surface: #1B2240; --surface-2: #232B4D; --ink: #EEF1FA; --muted: #A4ADCA; --line: #313A5C;
+  --ketchup: #F2553B; --ketchup-deep: #A9301C; --mustard: #FFC64D; --mint: #2DB88B; --mint-deep: #1A7E5E;
+  --scrim: rgba(4, 6, 14, .7); --shadow: 0 2px 0 rgba(0, 0, 0, .25), 0 10px 24px rgba(0, 0, 0, .3);
+  color-scheme: dark;
+}
+
+*, *::before, *::after { box-sizing: border-box; }
+html, body { height: 100%; }
+body {
+  margin: 0;
+  background: var(--bg);
+  color: var(--ink);
+  font-family: var(--font-body);
+  font-size: 17px;
+  line-height: 1.5;
+  overflow: hidden;
+  overscroll-behavior: none;
+  -webkit-tap-highlight-color: transparent;
+  -webkit-user-select: none;
+  user-select: none;
+  -webkit-touch-callout: none;
+}
+[hidden] { display: none !important; }
+button { font: inherit; color: inherit; cursor: pointer; touch-action: manipulation; }
+button:disabled { cursor: not-allowed; }
+:focus-visible { outline: 3px solid var(--mustard); outline-offset: 3px; }
+h1, h2, h3 { font-family: var(--font-display); font-weight: 400; margin: 0; text-wrap: balance; }
+.num { font-variant-numeric: tabular-nums; }
+
+/* 화면 */
+.screen {
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  padding-left: max(16px, env(safe-area-inset-left, 0px));
+  padding-right: max(16px, env(safe-area-inset-right, 0px));
+}
+.scroll { overflow-y: auto; -webkit-overflow-scrolling: touch; overscroll-behavior: contain; min-height: 0; }
+
+/* 장난감 버튼 — 눌리면 쑥 들어가는 키오스크 버튼 */
+.toy {
+  border: 0;
+  border-radius: var(--r-md);
+  font-family: var(--font-display);
+  font-size: 22px;
+  padding: 14px 22px;
+  min-height: 60px;
+  background: var(--surface);
+  color: var(--ink);
+  box-shadow: 0 5px 0 var(--line);
+  transition: transform .08s, box-shadow .08s;
+  display: inline-flex; align-items: center; justify-content: center; gap: 10px;
+}
+.toy:active:not(:disabled) { transform: translateY(4px); box-shadow: 0 1px 0 var(--line); }
+.toy.primary { background: var(--ketchup); color: var(--on-ketchup); box-shadow: 0 5px 0 var(--ketchup-deep); }
+.toy.primary:active:not(:disabled) { box-shadow: 0 1px 0 var(--ketchup-deep); }
+.toy.go { background: var(--mint); color: var(--on-mint); box-shadow: 0 5px 0 var(--mint-deep); }
+.toy.go:active:not(:disabled) { box-shadow: 0 1px 0 var(--mint-deep); }
+.toy:disabled { opacity: .45; }
+.toy.small { font-size: 18px; min-height: 48px; padding: 8px 16px; border-radius: 14px; box-shadow: 0 4px 0 var(--line); }
+.toy.small:active:not(:disabled) { transform: translateY(3px); box-shadow: 0 1px 0 var(--line); }
+.toy.go.small { box-shadow: 0 4px 0 var(--mint-deep); }
+
+.topbar {
+  display: flex; align-items: center; gap: 12px;
+  padding-block: 12px 10px;
+  flex-wrap: wrap;
+}
+.brand { display: flex; align-items: center; gap: 10px; font-family: var(--font-display); font-size: 26px; margin-right: auto; min-width: 0; }
+.brand-mark { width: 44px; height: 44px; border-radius: 14px; background: var(--ketchup); display: grid; place-items: center; font-size: 26px; flex: none; }
+.brand-name { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.chip {
+  display: inline-flex; align-items: center; gap: 6px;
+  padding: 6px 14px; border-radius: 999px;
+  background: var(--surface); border: 2px solid var(--line);
+  font-family: var(--font-display); font-size: 17px; white-space: nowrap;
+}
+.chip.mustard { background: var(--mustard); color: var(--on-mustard); border-color: var(--mustard); }
+
+/* ── 시작 화면 ── */
+#s-start { justify-content: safe center; overflow-y: auto; align-items: center; text-align: center; gap: 28px; position: relative; padding-block: 24px; }
+.start-sign { display: flex; flex-direction: column; align-items: center; gap: 6px; }
+.start-sign .awning {
+  width: min(520px, 100%); height: 34px; border-radius: 14px 14px 0 0;
+  background: repeating-linear-gradient(90deg, var(--ketchup) 0 40px, var(--surface) 40px 80px);
+  box-shadow: inset 0 -6px 0 rgba(0,0,0,.08);
+}
+.start-sign h1 { font-size: clamp(48px, 9vw, 92px); line-height: 1.05; color: var(--ketchup); letter-spacing: -1px; }
+.start-sign p { margin: 0; font-family: var(--font-display); font-size: clamp(20px, 3vw, 28px); color: var(--muted); }
+.start-choices { display: flex; gap: 20px; flex-wrap: wrap; justify-content: center; width: min(760px, 100%); }
+.start-choices .toy { flex: 1 1 240px; flex-direction: column; min-height: 170px; font-size: 30px; border-radius: var(--r-lg); gap: 6px; }
+.start-choices .toy .big-emoji { font-size: 64px; line-height: 1; }
+.start-choices .toy small { font-family: var(--font-body); font-size: 17px; opacity: .85; }
+.belt { width: min(900px, 100%); overflow: hidden; border-radius: 999px; background: var(--surface); box-shadow: var(--shadow); padding-block: 8px; }
+.belt-track { display: flex; width: max-content; font-size: 36px; gap: 22px; animation: belt 40s linear infinite; padding-left: 22px; }
+@keyframes belt { to { transform: translateX(-50%); } }
+.start-tools { position: absolute; left: 0; right: 0; bottom: 12px; display: flex; justify-content: space-between; gap: 10px; padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); flex-wrap: wrap; }
+.start-tools .group { display: flex; gap: 10px; }
+#kitchen-hold { position: relative; overflow: hidden; }
+#kitchen-hold::after {
+  content: ""; position: absolute; left: 0; bottom: 0; height: 5px; width: 0;
+  background: var(--mustard);
+}
+#kitchen-hold.holding::after { width: 100%; transition: width .9s linear; }
+
+/* ── 메뉴 화면 ── */
+.tabs { display: flex; gap: 10px; overflow-x: auto; padding-block: 4px 12px; scrollbar-width: none; flex: none; }
+.tabs::-webkit-scrollbar { display: none; }
+.tab {
+  --cat: var(--muted);
+  flex: none; border: 3px solid var(--line); background: var(--surface);
+  border-radius: 20px; min-height: 66px; padding: 6px 20px;
+  font-family: var(--font-display); font-size: 22px;
+  display: flex; align-items: center; gap: 8px;
+}
+.tab .t-emoji { font-size: 30px; }
+.tab[aria-selected="true"] { background: var(--cat); border-color: var(--cat); color: #FFFFFF; box-shadow: 0 4px 0 color-mix(in srgb, var(--cat) 65%, #000); }
+
+.menu-body { flex: 1; min-height: 0; display: grid; grid-template-columns: 1fr 340px; gap: 16px; padding-bottom: 14px; }
+.menu-main { min-height: 0; display: flex; flex-direction: column; }
+.cat-head { display: flex; align-items: baseline; gap: 10px; padding-block: 2px 10px; }
+.cat-head h2 { font-size: 28px; }
+.cat-head span { color: var(--muted); }
+.grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(165px, 1fr)); gap: 14px; padding-bottom: 8px; padding-top: 4px; }
+.item {
+  --cat: var(--muted);
+  position: relative; border: 0; background: var(--surface); border-radius: 22px;
+  padding: 16px 12px 14px; box-shadow: var(--shadow);
+  display: flex; flex-direction: column; align-items: center; gap: 4px; text-align: center;
+  transition: transform .1s;
+}
+.item:active:not(:disabled) { transform: scale(.96); }
+.bubble {
+  width: 96px; height: 96px; border-radius: 50%;
+  background: color-mix(in srgb, var(--cat) 16%, var(--surface));
+  display: grid; place-items: center; font-size: 56px; line-height: 1; margin-bottom: 6px;
+}
+.item .name { font-family: var(--font-display); font-size: 22px; line-height: 1.2; }
+.item .price { font-family: var(--font-display); font-size: 20px; color: var(--ketchup); }
+.item .price small, .won small { font-size: .7em; margin-left: 1px; }
+.tags { position: absolute; top: 10px; left: 10px; display: flex; flex-direction: column; gap: 4px; align-items: flex-start; }
+.tag { font-family: var(--font-display); font-size: 14px; padding: 2px 9px; border-radius: 999px; background: var(--mustard); color: var(--on-mustard); }
+.tag.hot { background: var(--ketchup); color: var(--on-ketchup); }
+.item.sold { opacity: .55; }
+.item.sold .stamp {
+  position: absolute; inset: 0; display: grid; place-items: center;
+}
+.item.sold .stamp span {
+  font-family: var(--font-display); font-size: 30px; color: var(--ketchup);
+  border: 4px solid var(--ketchup); border-radius: 12px; padding: 0 14px; transform: rotate(-14deg);
+  background: var(--surface);
+}
+
+/* 주문 쟁반 */
+.tray {
+  background: var(--surface); border-radius: var(--r-lg); box-shadow: var(--shadow);
+  display: flex; flex-direction: column; min-height: 0; overflow: hidden;
+}
+.tray-head { display: flex; justify-content: space-between; align-items: center; padding: 16px 18px 10px; }
+.tray-head h3 { font-size: 24px; }
+.tray-list { flex: 1; list-style: none; margin: 0; padding: 0 12px; }
+.tray-empty { color: var(--muted); text-align: center; padding: 30px 12px; }
+.tray-empty .big { font-size: 54px; display: block; }
+.line { display: grid; grid-template-columns: 44px 1fr auto; gap: 8px 10px; align-items: center; padding: 10px 6px; border-bottom: 2px dashed var(--line); }
+.line:last-child { border-bottom: 0; }
+.line .l-emoji { font-size: 34px; text-align: center; }
+.line .l-name { font-family: var(--font-display); font-size: 19px; line-height: 1.2; min-width: 0; }
+.line .l-opt { display: block; font-family: var(--font-body); font-size: 14px; color: var(--muted); }
+.line .l-price { font-family: var(--font-display); font-size: 18px; text-align: right; }
+.line .stepper { grid-column: 2 / 4; justify-self: end; }
+.stepper { display: inline-flex; align-items: center; gap: 4px; background: var(--surface-2); border-radius: 14px; padding: 4px; }
+.stepper button {
+  width: 42px; height: 42px; border-radius: 11px; border: 0; background: var(--surface);
+  font-family: var(--font-display); font-size: 26px; line-height: 1; box-shadow: 0 2px 0 var(--line);
+}
+.stepper button:active { transform: translateY(2px); box-shadow: none; }
+.stepper output { min-width: 36px; text-align: center; font-family: var(--font-display); font-size: 22px; }
+.tray-foot { padding: 14px 16px 18px; border-top: 3px solid var(--surface-2); display: flex; flex-direction: column; gap: 12px; }
+.total-row { display: flex; justify-content: space-between; align-items: baseline; font-family: var(--font-display); font-size: 20px; }
+.total-row .won { font-size: 32px; color: var(--ketchup); }
+.tray-foot .toy { width: 100%; font-size: 26px; min-height: 66px; }
+
+.orderbar {
+  display: none; align-items: center; gap: 12px;
+  background: var(--surface); border-radius: var(--r-lg); box-shadow: var(--shadow);
+  padding: 10px 10px 10px 18px; margin-bottom: 14px; flex: none;
+}
+.orderbar .ob-info { flex: 1; font-family: var(--font-display); font-size: 20px; min-width: 0; }
+.orderbar .ob-info .won { color: var(--ketchup); font-size: 24px; }
+.cart-count {
+  display: inline-grid; place-items: center; min-width: 30px; height: 30px; padding: 0 8px;
+  border-radius: 999px; background: var(--ketchup); color: var(--on-ketchup); font-size: 18px; margin-right: 4px;
+}
+.bump { animation: bump .35s; }
+@keyframes bump { 40% { transform: scale(1.35); } }
+
+@media (max-width: 899px) {
+  .menu-body { grid-template-columns: 1fr; padding-bottom: 10px; }
+  .menu-body .tray { display: none; }
+  .orderbar { display: flex; }
+}
+
+/* ── 메뉴 고르기 창 ── */
+.backdrop {
+  position: fixed; inset: 0; z-index: 30; background: var(--scrim);
+  display: grid; place-items: center;
+  padding: max(16px, env(safe-area-inset-top, 0px)) max(16px, env(safe-area-inset-right, 0px)) max(16px, env(safe-area-inset-bottom, 0px)) max(16px, env(safe-area-inset-left, 0px));
+  animation: fade .15s;
+}
+@keyframes fade { from { opacity: 0; } }
+.sheet {
+  width: min(560px, 100%); max-height: 100%; overflow-y: auto;
+  background: var(--surface); border-radius: 28px; padding: 24px;
+  display: flex; flex-direction: column; gap: 16px;
+  animation: pop .2s ease-out;
+}
+@keyframes pop { from { transform: translateY(24px) scale(.97); } }
+.sheet-hero { display: flex; gap: 18px; align-items: center; }
+.sheet-hero .bubble { width: 120px; height: 120px; font-size: 72px; margin: 0; flex: none; }
+.sheet-hero h3 { font-size: 34px; line-height: 1.15; }
+.sheet-hero p { margin: 6px 0 0; color: var(--muted); }
+.opt-group h4 { margin: 0 0 8px; font-family: var(--font-display); font-weight: 400; font-size: 20px; }
+.opt-choices { display: flex; flex-wrap: wrap; gap: 10px; }
+.opt {
+  border: 3px solid var(--line); background: var(--surface); border-radius: 16px;
+  padding: 10px 16px; min-height: 56px; font-family: var(--font-display); font-size: 19px;
+}
+.opt small { display: block; font-size: 14px; color: var(--muted); }
+.opt[aria-pressed="true"] { border-color: var(--ketchup); background: color-mix(in srgb, var(--ketchup) 12%, var(--surface)); }
+.qty-row { display: flex; justify-content: space-between; align-items: center; gap: 12px; flex-wrap: wrap; }
+.qty-row .stepper button { width: 56px; height: 56px; font-size: 32px; }
+.qty-row .stepper output { min-width: 50px; font-size: 30px; }
+.qty-row h4 { margin: 0; font-family: var(--font-display); font-weight: 400; font-size: 20px; }
+.sheet-actions { display: grid; grid-template-columns: 1fr 2fr; gap: 12px; }
+.sheet-actions .toy { font-size: 24px; }
+
+/* ── 주문 확인 ── */
+.page-head { display: flex; align-items: center; gap: 12px; padding-block: 14px 12px; flex: none; }
+.page-head h2 { font-size: 32px; margin-right: auto; }
+.confirm-body { flex: 1; min-height: 0; display: grid; grid-template-columns: 1fr 380px; gap: 16px; padding-bottom: 16px; }
+.confirm-list { background: var(--surface); border-radius: var(--r-lg); box-shadow: var(--shadow); padding: 8px 16px; list-style: none; margin: 0; }
+.confirm-list .line { grid-template-columns: 60px 1fr auto auto; gap: 14px; padding: 14px 4px; }
+.confirm-list .line .l-emoji { font-size: 44px; }
+.confirm-list .line .l-name { font-size: 24px; }
+.confirm-list .line .stepper { grid-column: 3; grid-row: 1; justify-self: end; }
+.confirm-list .line .l-price { font-size: 22px; min-width: 96px; grid-column: 4; grid-row: 1; }
+.confirm-side { display: flex; flex-direction: column; gap: 14px; min-height: 0; }
+.summary { background: var(--surface); border-radius: var(--r-lg); box-shadow: var(--shadow); padding: 20px; display: flex; flex-direction: column; gap: 12px; }
+.summary .big-total { font-family: var(--font-display); font-size: 48px; color: var(--ketchup); line-height: 1.1; }
+.summary .read { color: var(--muted); font-size: 18px; }
+.place-switch { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; background: var(--surface-2); padding: 6px; border-radius: 18px; }
+.place-switch button { border: 0; background: transparent; border-radius: 14px; min-height: 52px; font-family: var(--font-display); font-size: 19px; }
+.place-switch button[aria-pressed="true"] { background: var(--surface); box-shadow: 0 3px 0 var(--line); color: var(--ketchup); }
+.pay-buttons { display: grid; gap: 12px; }
+.pay-buttons .toy { min-height: 84px; font-size: 28px; }
+.pay-buttons .toy .big-emoji { font-size: 38px; }
+@media (max-width: 899px) {
+  .confirm-body { grid-template-columns: 1fr; overflow-y: auto; }
+  .confirm-list .line { grid-template-columns: 48px 1fr auto; }
+  .confirm-list .line .stepper { grid-column: 2 / 3; grid-row: 2; justify-self: start; }
+  .confirm-list .line .l-price { grid-row: 1; grid-column: 3; }
+}
+
+/* ── 카드 결제 ── */
+.pay-stage { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 22px; text-align: center; padding-bottom: 24px; min-height: 0; }
+.pay-stage h2 { font-size: clamp(30px, 5vw, 44px); }
+.pay-stage .sub { color: var(--muted); font-size: 20px; margin: 0; }
+.terminal { position: relative; width: 260px; height: 290px; }
+.term-body {
+  position: absolute; left: 0; right: 0; bottom: 0; height: 190px; border-radius: 28px;
+  background: var(--ink); box-shadow: var(--shadow); z-index: 2;
+  display: flex; flex-direction: column; align-items: center; justify-content: flex-end; padding: 18px; gap: 10px;
+}
+.term-slot { position: absolute; top: 18px; left: 40px; right: 40px; height: 12px; border-radius: 8px; background: #000; }
+.term-screen { width: 100%; height: 64px; border-radius: 12px; background: var(--mint); color: var(--on-mint); display: grid; place-items: center; font-family: var(--font-display); font-size: 22px; }
+.term-screen .num { font-size: 26px; }
+.term-lights { display: flex; gap: 8px; }
+.term-lights i { width: 12px; height: 12px; border-radius: 50%; background: var(--muted); }
+.term-lights i.on { background: var(--mustard); animation: blink .5s infinite alternate; }
+@keyframes blink { to { opacity: .3; } }
+.card {
+  position: absolute; left: 50%; top: 0; width: 160px; height: 104px; margin-left: -80px; z-index: 1;
+  border: 0; border-radius: 14px; padding: 12px 14px; text-align: left;
+  background: linear-gradient(135deg, var(--mustard), var(--ketchup));
+  color: #FFFFFF; font-family: var(--font-display); font-size: 17px;
+  box-shadow: 0 8px 16px rgba(0,0,0,.2);
+  transition: transform .7s cubic-bezier(.5, 0, .3, 1);
+  animation: nudge 1.4s ease-in-out infinite;
+}
+.card .chipbox { display: block; width: 30px; height: 22px; border-radius: 5px; background: #F8E3A3; margin: 10px 0 6px; }
+.card.in { animation: none; transform: translateY(96px); }
+@keyframes nudge { 50% { transform: translateY(-10px); } }
+.dots::after { content: ""; animation: dots 1.2s steps(4) infinite; }
+@keyframes dots { 0% { content: ""; } 25% { content: "."; } 50% { content: ".."; } 75% { content: "..."; } }
+
+/* ── 현금 결제 ── */
+.cash-body { flex: 1; min-height: 0; display: grid; grid-template-columns: 360px 1fr; gap: 16px; padding-bottom: 16px; }
+.cash-status { background: var(--surface); border-radius: var(--r-lg); box-shadow: var(--shadow); padding: 20px; display: flex; flex-direction: column; gap: 14px; }
+.cash-row { display: flex; justify-content: space-between; align-items: baseline; gap: 10px; font-family: var(--font-display); font-size: 22px; }
+.cash-row .won { font-size: 30px; }
+.cash-row.need .won { color: var(--ketchup); }
+.cash-row.change .won { color: var(--mint); }
+.cash-hint { margin: 0; color: var(--muted); }
+.cash-pile { display: flex; flex-wrap: wrap; gap: 8px; min-height: 36px; }
+.cash-pile .chip { font-size: 15px; }
+.change-box { background: color-mix(in srgb, var(--mint) 12%, var(--surface)); border-radius: 16px; padding: 12px 14px; font-size: 16px; }
+.change-box b { font-family: var(--font-display); font-weight: 400; font-size: 18px; }
+.cash-status .toy { margin-top: auto; }
+.money { display: flex; flex-direction: column; gap: 16px; padding: 4px 4px 12px; }
+.money h3 { font-size: 22px; color: var(--muted); }
+.bills { display: grid; grid-template-columns: repeat(auto-fill, minmax(190px, 1fr)); gap: 14px; }
+.bill {
+  border: 0; border-radius: 12px; min-height: 96px; position: relative; overflow: hidden;
+  color: #1D2440; font-family: var(--font-display); font-size: 28px;
+  box-shadow: 0 5px 0 rgba(0,0,0,.18); transition: transform .08s;
+}
+.bill::before { content: ""; position: absolute; inset: 8px; border: 2px solid rgba(29,36,64,.25); border-radius: 8px; }
+.bill::after { content: ""; position: absolute; right: 16px; top: 50%; width: 46px; height: 46px; margin-top: -23px; border-radius: 50%; background: rgba(255,255,255,.4); }
+.bill:active { transform: translateY(4px); box-shadow: 0 1px 0 rgba(0,0,0,.18); }
+.b1000 { background: #9CC3EA; }
+.b5000 { background: #F2B27E; }
+.b10000 { background: #9FD3A6; }
+.b50000 { background: #F3D27A; }
+.coins { display: flex; gap: 18px; flex-wrap: wrap; }
+.coin {
+  border: 0; border-radius: 50%; width: 104px; height: 104px;
+  background: radial-gradient(circle at 35% 30%, #F4F6FA, #B9C0CC);
+  color: #1D2440; font-family: var(--font-display); font-size: 24px;
+  box-shadow: 0 5px 0 #8C94A3, inset 0 0 0 5px rgba(255,255,255,.5); transition: transform .08s;
+}
+.coin.c100 { width: 92px; height: 92px; font-size: 22px; }
+.coin:active { transform: translateY(4px); box-shadow: 0 1px 0 #8C94A3, inset 0 0 0 5px rgba(255,255,255,.5); }
+@media (max-width: 899px) {
+  .cash-body { grid-template-columns: 1fr; overflow-y: auto; }
+  .bills { grid-template-columns: 1fr 1fr; }
+  .bill { font-size: 22px; min-height: 80px; }
+  .bill::after { display: none; }
+}
+
+/* ── 주문 완료 ── */
+#s-done { align-items: center; justify-content: center; text-align: center; gap: 18px; padding-block: 20px; overflow-y: auto; }
+.receipt {
+  width: min(440px, 100%); background: var(--surface); padding: 26px 24px 30px; box-shadow: var(--shadow);
+  border-radius: 6px 6px 0 0; position: relative;
+  -webkit-mask: radial-gradient(circle 10px at 50% 100%, transparent 98%, #000) 50% 100% / 26px 100% repeat-x;
+          mask: radial-gradient(circle 10px at 50% 100%, transparent 98%, #000) 50% 100% / 26px 100% repeat-x;
+  animation: print .6s ease-out;
+}
+@keyframes print { from { transform: translateY(-30px); opacity: .2; } }
+.receipt .r-title { font-family: var(--font-display); font-size: 22px; color: var(--muted); }
+.receipt .r-no { font-family: var(--font-display); font-size: 120px; line-height: 1; color: var(--ketchup); margin: 6px 0; }
+.receipt .r-place { margin-bottom: 14px; }
+.receipt ul { list-style: none; padding: 14px 0 0; margin: 0; border-top: 2px dashed var(--line); text-align: left; display: flex; flex-direction: column; gap: 6px; }
+.receipt li { display: flex; justify-content: space-between; gap: 10px; }
+.receipt .r-total { margin-top: 12px; padding-top: 12px; border-top: 2px dashed var(--line); display: flex; justify-content: space-between; font-family: var(--font-display); font-size: 22px; }
+.fortune { width: min(440px, 100%); background: color-mix(in srgb, var(--mustard) 25%, var(--surface)); border-radius: 18px; padding: 14px 18px; font-family: var(--font-display); font-size: 19px; }
+.done-msg { font-family: var(--font-display); font-size: 24px; margin: 0; }
+.done-actions { display: flex; flex-direction: column; align-items: center; gap: 8px; }
+.done-actions small { color: var(--muted); }
+
+/* ── 주방 ── */
+#s-kitchen .tabs { padding-bottom: 14px; }
+#s-kitchen .tab { --cat: var(--ink); min-height: 54px; font-size: 20px; }
+#s-kitchen .tab[aria-selected="true"] { color: var(--bg); }
+.k-panel { flex: 1; min-height: 0; padding-bottom: 20px; }
+.k-stats { display: flex; gap: 12px; flex-wrap: wrap; margin-bottom: 14px; }
+.k-stat { background: var(--surface); border-radius: 18px; padding: 12px 18px; box-shadow: var(--shadow); }
+.k-stat b { display: block; font-family: var(--font-display); font-weight: 400; font-size: 30px; }
+.k-stat span { color: var(--muted); font-size: 15px; }
+.tickets { display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 14px; align-items: start; }
+.ticket { background: var(--surface); border-radius: 18px; box-shadow: var(--shadow); padding: 16px; display: flex; flex-direction: column; gap: 10px; border-top: 8px solid var(--mustard); }
+.ticket.done { border-top-color: var(--mint); opacity: .7; }
+.ticket-head { display: flex; justify-content: space-between; align-items: center; gap: 8px; }
+.ticket-head .no { font-family: var(--font-display); font-size: 36px; line-height: 1; }
+.ticket-head .meta { text-align: right; color: var(--muted); font-size: 14px; }
+.ticket ul { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 6px; }
+.ticket li { font-size: 18px; }
+.ticket li b { font-family: var(--font-display); font-weight: 400; }
+.ticket li small { display: block; color: var(--muted); font-size: 14px; padding-left: 30px; }
+.ticket .toy { width: 100%; }
+.k-empty { text-align: center; color: var(--muted); padding: 50px 10px; font-size: 19px; }
+.k-empty .big { font-size: 60px; display: block; }
+.k-section { margin-bottom: 20px; }
+.k-section h3 { font-size: 22px; margin-bottom: 10px; }
+.sold-grid { display: flex; flex-wrap: wrap; gap: 10px; }
+.sold-toggle { border: 3px solid var(--line); background: var(--surface); border-radius: 14px; padding: 8px 14px; font-family: var(--font-display); font-size: 18px; min-height: 52px; }
+.sold-toggle[aria-pressed="true"] { border-color: var(--ketchup); color: var(--ketchup); text-decoration: line-through; }
+.settings { display: flex; flex-direction: column; gap: 16px; max-width: 640px; }
+.setting { background: var(--surface); border-radius: 18px; padding: 16px 18px; box-shadow: var(--shadow); display: flex; flex-direction: column; gap: 10px; }
+.setting label, .setting .s-title { font-family: var(--font-display); font-size: 20px; }
+.setting p { margin: 0; color: var(--muted); font-size: 15px; }
+.setting input {
+  font: inherit; font-family: var(--font-display); font-size: 22px; padding: 10px 14px; border-radius: 12px;
+  border: 3px solid var(--line); background: var(--surface-2); color: var(--ink); width: 100%;
+  -webkit-user-select: text; user-select: text;
+}
+.setting .row { display: flex; gap: 10px; flex-wrap: wrap; }
+.toy.danger { color: var(--ketchup); }
+.toy.danger.armed { background: var(--ketchup); color: var(--on-ketchup); box-shadow: 0 4px 0 var(--ketchup-deep); }
+
+/* 알림 */
+.toast {
+  position: fixed; left: 50%; bottom: calc(110px + env(safe-area-inset-bottom, 0px)); z-index: 40;
+  transform: translateX(-50%); max-width: calc(100% - 32px);
+  background: var(--ink); color: var(--bg); font-family: var(--font-display); font-size: 20px;
+  padding: 12px 22px; border-radius: 999px; box-shadow: var(--shadow);
+  animation: toast 1.8s forwards; pointer-events: none; text-align: center;
+}
+@keyframes toast { 0% { opacity: 0; transform: translate(-50%, 16px); } 12%, 80% { opacity: 1; transform: translate(-50%, 0); } 100% { opacity: 0; } }
+
+@media (max-width: 520px) {
+  .brand { font-size: 22px; }
+  .tab { font-size: 19px; min-height: 58px; padding: 4px 14px; }
+  .tab .t-emoji { font-size: 24px; }
+  .grid { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; }
+  .bubble { width: 78px; height: 78px; font-size: 46px; }
+  .item .name { font-size: 19px; }
+  .sheet { padding: 18px; }
+  .sheet-hero .bubble { width: 90px; height: 90px; font-size: 54px; }
+  .sheet-hero h3 { font-size: 28px; }
+  .start-choices .toy { min-height: 130px; font-size: 26px; }
+  .start-choices .toy .big-emoji { font-size: 50px; }
+  .receipt .r-no { font-size: 96px; }
+  .start-tools { position: static; justify-content: center; }
+}
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { animation-duration: .01ms !important; animation-iteration-count: 1 !important; transition-duration: .01ms !important; }
+}
+</style>
+</head>
+<body>
+
+<!-- 시작 -->
+<section class="screen" id="s-start" aria-label="시작">
+  <div class="start-sign">
+    <div class="awning" aria-hidden="true"></div>
+    <h1 id="start-name">꼬마식당</h1>
+    <p>어서 오세요! 어디서 드실 건가요?</p>
+  </div>
+  <div class="start-choices">
+    <button class="toy primary" id="btn-eat-in" type="button"><span class="big-emoji" aria-hidden="true">🍽️</span>여기서 먹어요<small>식당에서 먹고 가요</small></button>
+    <button class="toy go" id="btn-take-out" type="button"><span class="big-emoji" aria-hidden="true">🛍️</span>가져갈래요<small>포장해서 가요</small></button>
+  </div>
+  <div class="belt" aria-hidden="true"><div class="belt-track" id="belt"></div></div>
+  <div class="start-tools">
+    <div class="group">
+      <button class="toy small" id="btn-sound" type="button" aria-label="소리 켜기/끄기">🔊 소리 켜짐</button>
+      <button class="toy small" id="btn-full" type="button">⛶ 전체 화면</button>
+    </div>
+    <button class="toy small" id="kitchen-hold" type="button" aria-label="주방 화면 열기 (길게 누르기)">👩‍🍳 주방 (꾹 누르기)</button>
+  </div>
+</section>
+
+<!-- 메뉴 -->
+<section class="screen" id="s-menu" aria-label="메뉴 고르기" hidden>
+  <header class="topbar">
+    <div class="brand"><span class="brand-mark" aria-hidden="true">🍳</span><span class="brand-name" id="menu-name">꼬마식당</span></div>
+    <span class="chip mustard" id="menu-place">🍽️ 여기서 먹어요</span>
+    <button class="toy small" id="btn-home" type="button">🏠 처음으로</button>
+  </header>
+  <nav class="tabs" id="tabs" role="tablist" aria-label="음식 종류"></nav>
+  <div class="menu-body">
+    <div class="menu-main">
+      <div class="cat-head"><h2 id="cat-title">한식</h2><span id="cat-count"></span></div>
+      <div class="scroll" id="grid-scroll"><div class="grid" id="grid"></div></div>
+    </div>
+    <aside class="tray" aria-label="내 주문">
+      <div class="tray-head"><h3>🧺 내 주문</h3><button class="toy small" id="btn-clear" type="button">모두 빼기</button></div>
+      <ul class="tray-list scroll" id="tray-list"></ul>
+      <div class="tray-foot">
+        <div class="total-row"><span>합계</span><span class="won num" id="tray-total">0원</span></div>
+        <button class="toy primary" id="btn-order" type="button">주문하기 👉</button>
+      </div>
+    </aside>
+  </div>
+  <div class="orderbar">
+    <div class="ob-info"><span class="cart-count num" id="bar-count">0</span>개 · <span class="won num" id="bar-total">0원</span></div>
+    <button class="toy primary" id="btn-order-bar" type="button">주문하기 👉</button>
+  </div>
+</section>
+
+<!-- 주문 확인 -->
+<section class="screen" id="s-confirm" aria-label="주문 확인" hidden>
+  <header class="page-head">
+    <button class="toy small" id="btn-back-menu" type="button">👈 더 고르기</button>
+    <h2>주문을 확인해 주세요</h2>
+  </header>
+  <div class="confirm-body">
+    <ul class="confirm-list scroll" id="confirm-list"></ul>
+    <div class="confirm-side">
+      <div class="summary">
+        <div class="place-switch" role="group" aria-label="먹는 곳">
+          <button type="button" data-place="in">🍽️ 여기서 먹어요</button>
+          <button type="button" data-place="out">🛍️ 가져갈래요</button>
+        </div>
+        <div>
+          <div style="color: var(--muted)">내야 할 돈</div>
+          <div class="big-total num" id="confirm-total">0원</div>
+          <div class="read" id="confirm-read"></div>
+        </div>
+      </div>
+      <div class="pay-buttons" id="pay-buttons">
+        <button class="toy primary" id="btn-pay-card" type="button"><span class="big-emoji" aria-hidden="true">💳</span>카드로 낼게요</button>
+        <button class="toy go" id="btn-pay-cash" type="button"><span class="big-emoji" aria-hidden="true">💵</span>현금으로 낼게요</button>
+      </div>
+      <div class="pay-buttons" id="free-buttons" hidden>
+        <button class="toy go" id="btn-pay-free" type="button"><span class="big-emoji" aria-hidden="true">🎁</span>공짜! 주문 끝내기</button>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- 카드 결제 -->
+<section class="screen" id="s-card" aria-label="카드 결제" hidden>
+  <header class="page-head">
+    <button class="toy small" id="btn-card-cancel" type="button">✖ 취소</button>
+    <h2>카드 결제</h2>
+  </header>
+  <div class="pay-stage">
+    <h2 id="card-msg">카드를 눌러서 꽂아 주세요</h2>
+    <div class="terminal">
+      <button class="card" id="card" type="button" aria-label="카드 꽂기">꼬마카드<span class="chipbox"></span><span class="num">1234 ···· 5678</span></button>
+      <div class="term-body">
+        <div class="term-slot" aria-hidden="true"></div>
+        <div class="term-screen" id="term-screen"><span class="num" id="term-amount">0원</span></div>
+        <div class="term-lights" aria-hidden="true"><i id="light1"></i><i id="light2"></i><i id="light3"></i></div>
+      </div>
+    </div>
+    <p class="sub" id="card-sub">결제가 끝날 때까지 카드를 빼지 마세요</p>
+  </div>
+</section>
+
+<!-- 현금 결제 -->
+<section class="screen" id="s-cash" aria-label="현금 결제" hidden>
+  <header class="page-head">
+    <button class="toy small" id="btn-cash-cancel" type="button">✖ 취소</button>
+    <h2>현금으로 내기</h2>
+  </header>
+  <div class="cash-body">
+    <div class="cash-status">
+      <div class="cash-row"><span>내야 할 돈</span><span class="won num" id="cash-total">0원</span></div>
+      <div class="cash-row"><span>낸 돈</span><span class="won num" id="cash-paid">0원</span></div>
+      <div class="cash-pile" id="cash-pile"></div>
+      <div class="cash-row need" id="cash-need-row"><span>더 내야 해요</span><span class="won num" id="cash-need">0원</span></div>
+      <div class="cash-row change" id="cash-change-row" hidden><span>거스름돈</span><span class="won num" id="cash-change">0원</span></div>
+      <div class="change-box" id="change-box" hidden></div>
+      <p class="cash-hint" id="cash-hint">돈을 눌러서 내 보세요!</p>
+      <div class="row" style="display:flex; gap:10px">
+        <button class="toy small" id="btn-cash-reset" type="button" style="flex:1">↩ 다시 세기</button>
+      </div>
+      <button class="toy go" id="btn-cash-done" type="button" disabled>결제 끝! ✔</button>
+    </div>
+    <div class="money scroll">
+      <h3>지폐</h3>
+      <div class="bills">
+        <button class="bill b1000" type="button" data-money="1000">1,000원</button>
+        <button class="bill b5000" type="button" data-money="5000">5,000원</button>
+        <button class="bill b10000" type="button" data-money="10000">10,000원</button>
+        <button class="bill b50000" type="button" data-money="50000">50,000원</button>
+      </div>
+      <h3>동전</h3>
+      <div class="coins">
+        <button class="coin c100" type="button" data-money="100">100원</button>
+        <button class="coin c500" type="button" data-money="500">500원</button>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- 주문 완료 -->
+<section class="screen" id="s-done" aria-label="주문 완료" hidden>
+  <div class="receipt" id="receipt"></div>
+  <div class="fortune" id="fortune" hidden></div>
+  <p class="done-msg">음식이 나오면 번호를 불러 드릴게요!</p>
+  <div class="done-actions">
+    <button class="toy primary" id="btn-done-home" type="button">🏠 처음으로</button>
+    <small><span class="num" id="done-count">20</span>초 뒤에 처음 화면으로 돌아가요</small>
+  </div>
+</section>
+
+<!-- 주방 (어른용) -->
+<section class="screen" id="s-kitchen" aria-label="주방" hidden>
+  <header class="topbar">
+    <div class="brand"><span class="brand-mark" aria-hidden="true">👩‍🍳</span><span class="brand-name">주방</span></div>
+    <button class="toy small" id="btn-kitchen-exit" type="button">🏠 키오스크로</button>
+  </header>
+  <nav class="tabs" role="tablist" aria-label="주방 메뉴">
+    <button class="tab" role="tab" type="button" data-ktab="orders" aria-selected="true">🧾 주문 현황</button>
+    <button class="tab" role="tab" type="button" data-ktab="sold" aria-selected="false">🚫 품절 관리</button>
+    <button class="tab" role="tab" type="button" data-ktab="settings" aria-selected="false">⚙️ 설정</button>
+  </nav>
+  <div class="k-panel scroll" id="k-orders"></div>
+  <div class="k-panel scroll" id="k-sold" hidden></div>
+  <div class="k-panel scroll" id="k-settings" hidden>
+    <div class="settings">
+      <div class="setting">
+        <label for="set-name">식당 이름</label>
+        <input id="set-name" type="text" maxlength="12" autocomplete="off" placeholder="예: 지우네 식당">
+        <p>시작 화면과 영수증에 나와요.</p>
+      </div>
+      <div class="setting">
+        <div class="s-title">주문 번호</div>
+        <p>다음 주문 번호: <b class="num" id="set-next">1</b>번</p>
+        <div class="row"><button class="toy small danger" id="btn-reset-no" type="button">1번부터 다시 시작</button></div>
+      </div>
+      <div class="setting">
+        <div class="s-title">주문 기록</div>
+        <p>지금까지 받은 주문과 판매 금액을 모두 지워요. 품절 설정과 식당 이름은 남아요.</p>
+        <div class="row"><button class="toy small danger" id="btn-wipe" type="button">주문 기록 모두 지우기</button></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<div class="backdrop" id="sheet-backdrop" hidden>
+  <div class="sheet" id="sheet" role="dialog" aria-modal="true" aria-labelledby="sheet-title"></div>
+</div>
+
+<script>
+(function () {
+  "use strict";
+
+  /* ───────── 메뉴 데이터 ───────── */
+  var CATS = [
+    { id: "korean",   name: "한식",   emoji: "🍚", color: "--c-korean" },
+    { id: "chinese",  name: "중식",   emoji: "🥟", color: "--c-chinese" },
+    { id: "japanese", name: "일식",   emoji: "🍣", color: "--c-japanese" },
+    { id: "western",  name: "양식",   emoji: "🍝", color: "--c-western" },
+    { id: "snack",    name: "분식",   emoji: "🍢", color: "--c-snack" },
+    { id: "drink",    name: "음료",   emoji: "🥤", color: "--c-drink" },
+    { id: "dessert",  name: "디저트", emoji: "🍰", color: "--c-dessert" }
+  ];
+
+  // 옵션: [보기 이름, 추가 금액]
+  var OPTS = {
+    spicy:   { name: "맵기",   choices: [["안 매워요", 0], ["조금 매워요", 0], ["아주 매워요 🔥", 0]] },
+    big:     { name: "양",     choices: [["보통", 0], ["곱빼기", 1000]] },
+    sauce:   { name: "소스",   choices: [["부어 먹기", 0], ["찍어 먹기", 0]] },
+    pizza:   { name: "크기",   choices: [["보통 판", 0], ["큰 판", 3000]] },
+    steak:   { name: "굽기",   choices: [["살짝 익혀요", 0], ["알맞게", 0], ["바싹 익혀요", 0]] },
+    size:    { name: "컵 크기", choices: [["보통 컵", 0], ["큰 컵", 1000]] },
+    ice:     { name: "얼음",   choices: [["얼음 많이", 0], ["얼음 조금", 0], ["얼음 빼고", 0]] },
+    flavor:  { name: "맛",     choices: [["바닐라", 0], ["초코", 0], ["딸기", 0]] },
+    bingsu:  { name: "맛",     choices: [["팥", 0], ["딸기", 0], ["망고", 1000]] },
+    hotcold: { name: "온도",   choices: [["따뜻하게", 0], ["시원하게", 0]] }
+  };
+
+  var MENU = [
+    { id: "bibimbap",  cat: "korean", name: "비빔밥",   emoji: "🍚", price: 7000,  desc: "밥에 나물과 고추장을 넣고 쓱쓱 비벼요.", tags: ["인기"], opts: ["spicy"] },
+    { id: "kimchijji", cat: "korean", name: "김치찌개", emoji: "🍲", price: 8000,  desc: "보글보글 끓인 김치찌개예요.", tags: ["매워요"], opts: ["spicy"] },
+    { id: "bulgogi",   cat: "korean", name: "불고기",   emoji: "🥘", price: 10000, desc: "달콤 짭짤한 양념 고기예요.", tags: ["인기"] },
+    { id: "galbi",     cat: "korean", name: "갈비",     emoji: "🍖", price: 12000, desc: "뼈에 붙은 고기를 뜯어 먹어요." },
+    { id: "eggroll",   cat: "korean", name: "계란말이", emoji: "🍳", price: 5000,  desc: "폭신폭신 돌돌 만 계란이에요." },
+    { id: "noodle",    cat: "korean", name: "잔치국수", emoji: "🥢", price: 6000,  desc: "따끈한 국물에 말아 먹는 국수예요.", opts: ["big"] },
+
+    { id: "jjajang",   cat: "chinese", name: "짜장면",   emoji: "🍜", price: 6000,  desc: "까만 짜장 소스에 비벼 먹는 면이에요.", tags: ["인기"], opts: ["big"] },
+    { id: "jjamppong", cat: "chinese", name: "짬뽕",     emoji: "🌶️", price: 7000,  desc: "해물이 듬뿍 들어간 빨간 국물 면이에요.", tags: ["매워요"], opts: ["spicy", "big"] },
+    { id: "tangsuyuk", cat: "chinese", name: "탕수육",   emoji: "🍗", price: 15000, desc: "바삭한 고기 튀김에 새콤달콤 소스!", opts: ["sauce"] },
+    { id: "mandu",     cat: "chinese", name: "군만두",   emoji: "🥟", price: 5000,  desc: "겉은 바삭, 속은 촉촉한 만두예요." },
+    { id: "friedrice", cat: "chinese", name: "볶음밥",   emoji: "🍛", price: 7000,  desc: "불맛 나는 고슬고슬 볶음밥이에요." },
+    { id: "fortune",   cat: "chinese", name: "포춘쿠키", emoji: "🥠", price: 1000,  desc: "쿠키 속에 오늘의 운세가 들어 있어요!", tags: ["깜짝"] },
+
+    { id: "sushi",     cat: "japanese", name: "초밥",     emoji: "🍣", price: 12000, desc: "밥 위에 생선을 올린 초밥 한 접시예요.", tags: ["인기"] },
+    { id: "udon",      cat: "japanese", name: "우동",     emoji: "🍥", price: 7000,  desc: "통통한 면발의 따뜻한 우동이에요.", opts: ["big"] },
+    { id: "tempura",   cat: "japanese", name: "새우튀김", emoji: "🍤", price: 8000,  desc: "바삭바삭 커다란 새우튀김이에요." },
+    { id: "tonkatsu",  cat: "japanese", name: "돈가스",   emoji: "🐷", price: 9000,  desc: "두툼한 고기를 바삭하게 튀겼어요." },
+    { id: "salmon",    cat: "japanese", name: "연어덮밥", emoji: "🐟", price: 11000, desc: "밥 위에 연어를 듬뿍 올렸어요." },
+    { id: "onigiri",   cat: "japanese", name: "주먹밥",   emoji: "🍙", price: 3000,  desc: "한 손에 쏙 들어오는 주먹밥이에요." },
+
+    { id: "pizza",     cat: "western", name: "피자",     emoji: "🍕", price: 13000, desc: "치즈가 쭉 늘어나는 피자예요.", tags: ["인기"], opts: ["pizza"] },
+    { id: "spaghetti", cat: "western", name: "스파게티", emoji: "🍝", price: 9000,  desc: "토마토 소스 스파게티예요." },
+    { id: "burger",    cat: "western", name: "햄버거",   emoji: "🍔", price: 7000,  desc: "고기 패티와 치즈가 쏙 들어갔어요." },
+    { id: "steak",     cat: "western", name: "스테이크", emoji: "🥩", price: 15000, desc: "칼로 썰어 먹는 커다란 고기예요.", opts: ["steak"] },
+    { id: "salad",     cat: "western", name: "샐러드",   emoji: "🥗", price: 6000,  desc: "아삭아삭 신선한 채소예요." },
+    { id: "fries",     cat: "western", name: "감자튀김", emoji: "🍟", price: 3000,  desc: "케첩에 콕 찍어 먹어요." },
+
+    { id: "tteokbokki", cat: "snack", name: "떡볶이",   emoji: "🍢", price: 5000, desc: "쫄깃한 떡에 달콤 매콤한 소스!", tags: ["인기"], opts: ["spicy"] },
+    { id: "gimbap",     cat: "snack", name: "김밥",     emoji: "🌯", price: 4000, desc: "소풍 갈 때 먹는 돌돌 김밥이에요." },
+    { id: "hotdog",     cat: "snack", name: "핫도그",   emoji: "🌭", price: 3000, desc: "설탕 솔솔, 케첩 쭉!" },
+    { id: "ramyeon",    cat: "snack", name: "라면",     emoji: "🍜", price: 4000, desc: "꼬불꼬불 라면이에요.", opts: ["spicy"] },
+    { id: "matang",     cat: "snack", name: "고구마맛탕", emoji: "🍠", price: 4000, desc: "달콤한 시럽을 입힌 고구마예요." },
+
+    { id: "cola",      cat: "drink", name: "콜라",       emoji: "🥤", price: 2000, desc: "톡 쏘는 탄산음료예요.", opts: ["size", "ice"] },
+    { id: "orange",    cat: "drink", name: "오렌지주스", emoji: "🍊", price: 3000, desc: "새콤달콤 오렌지를 짰어요.", tags: ["인기"], opts: ["size"] },
+    { id: "strawmilk", cat: "drink", name: "딸기우유",   emoji: "🥛", price: 2500, desc: "분홍빛 달콤한 우유예요." },
+    { id: "bubbletea", cat: "drink", name: "버블티",     emoji: "🧋", price: 4000, desc: "쫀득한 펄이 들어 있어요.", opts: ["size", "ice"] },
+    { id: "lemonade",  cat: "drink", name: "레모네이드", emoji: "🍋", price: 3500, desc: "상큼한 레몬 음료예요.", opts: ["size", "ice"] },
+    { id: "choco",     cat: "drink", name: "초코우유",   emoji: "🍫", price: 3000, desc: "달콤한 초콜릿 우유예요.", opts: ["hotcold"] },
+    { id: "water",     cat: "drink", name: "물",         emoji: "💧", price: 0,    desc: "시원한 물은 공짜예요!", tags: ["무료"] },
+
+    { id: "icecream",  cat: "dessert", name: "아이스크림", emoji: "🍦", price: 3000, desc: "녹기 전에 얼른 먹어요!", tags: ["인기"], opts: ["flavor"] },
+    { id: "bingsu",    cat: "dessert", name: "빙수",       emoji: "🍧", price: 7000, desc: "곱게 간 얼음 위에 맛있는 토핑!", opts: ["bingsu"] },
+    { id: "cake",      cat: "dessert", name: "케이크",     emoji: "🍰", price: 5000, desc: "생크림과 딸기가 올라간 케이크예요." },
+    { id: "donut",     cat: "dessert", name: "도넛",       emoji: "🍩", price: 2000, desc: "가운데가 뻥 뚫린 달콤한 도넛!" },
+    { id: "cookie",    cat: "dessert", name: "쿠키",       emoji: "🍪", price: 1500, desc: "초코칩이 콕콕 박혀 있어요." },
+    { id: "pudding",   cat: "dessert", name: "푸딩",       emoji: "🍮", price: 2500, desc: "말랑말랑 흔들리는 푸딩이에요." }
+  ];
+
+  var FORTUNES = [
+    "오늘은 웃을 일이 가득할 거예요! 😄",
+    "새로운 친구를 사귀게 될 거예요. 🤝",
+    "숙제를 금방 끝낼 수 있어요! ✏️",
+    "맛있는 간식이 생길 거예요. 🍬",
+    "용감한 하루가 될 거예요! 🦁",
+    "누군가 나를 칭찬해 줄 거예요. 🌟",
+    "오늘 밤 아주 좋은 꿈을 꿀 거예요. 🌙",
+    "작은 행운이 찾아올 거예요. 🍀"
+  ];
+
+  var MONEY = [50000, 10000, 5000, 1000, 500, 100];
+
+  /* ───────── 저장소 ───────── */
+  var KEY = "kkoma-kiosk-v1";
+  var store = (function () {
+    var d = { orders: [], nextNo: 1, soldOut: [], sound: true, name: "꼬마식당" };
+    try {
+      var s = JSON.parse(localStorage.getItem(KEY) || "null");
+      if (s && typeof s === "object") Object.keys(d).forEach(function (k) { if (k in s) d[k] = s[k]; });
+    } catch (e) {}
+    return d;
+  })();
+  function save() { try { localStorage.setItem(KEY, JSON.stringify(store)); } catch (e) {} }
+
+  var state = { place: "in", cat: "korean", cart: [], cash: [], sheet: null, ktab: "orders" };
+
+  /* ───────── 도구 ───────── */
+  function $(s) { return document.querySelector(s); }
+  function $$(s) { return Array.prototype.slice.call(document.querySelectorAll(s)); }
+  function esc(s) { return String(s).replace(/[&<>"']/g, function (c) { return { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]; }); }
+  function won(n) { return n.toLocaleString("ko-KR") + "원"; }
+  function wonHtml(n) { return n.toLocaleString("ko-KR") + "<small>원</small>"; }
+  function byId(id) { for (var i = 0; i < MENU.length; i++) if (MENU[i].id === id) return MENU[i]; return null; }
+  function catOf(id) { for (var i = 0; i < CATS.length; i++) if (CATS[i].id === id) return CATS[i]; return CATS[0]; }
+  function isSold(id) { return store.soldOut.indexOf(id) !== -1; }
+  function cartTotal() { return state.cart.reduce(function (s, l) { return s + l.unit * l.qty; }, 0); }
+  function cartCount() { return state.cart.reduce(function (s, l) { return s + l.qty; }, 0); }
+
+  // 금액을 한글로 읽기: 21000 → "이만 천 원"
+  function readKo(n) {
+    if (n === 0) return "영 원";
+    var D = "영일이삼사오육칠팔구";
+    function small(x) {
+      var out = "", units = [[1000, "천"], [100, "백"], [10, "십"]];
+      units.forEach(function (u) {
+        var q = Math.floor(x / u[0]);
+        if (q) out += (q === 1 ? "" : D[q]) + u[1];
+        x %= u[0];
+      });
+      if (x) out += D[x];
+      return out;
+    }
+    var man = Math.floor(n / 10000), rest = n % 10000, s = "";
+    if (man) s += (man === 1 ? "" : small(man)) + "만";
+    if (rest) s += (s ? " " : "") + small(rest);
+    return s + " 원";
+  }
+
+  // 거스름돈을 지폐·동전으로 나누기
+  function breakDown(n) {
+    var out = [];
+    MONEY.forEach(function (m) { var q = Math.floor(n / m); if (q) { out.push([m, q]); n -= m * q; } });
+    return out;
+  }
+
+  /* ───────── 소리 ───────── */
+  var actx = null;
+  function tone(freq, dur, when, type, vol) {
+    if (!store.sound) return;
+    try {
+      actx = actx || new (window.AudioContext || window.webkitAudioContext)();
+      if (actx.state === "suspended") actx.resume();
+      var t = actx.currentTime + (when || 0);
+      var o = actx.createOscillator(), g = actx.createGain();
+      o.type = type || "sine"; o.frequency.value = freq;
+      g.gain.setValueAtTime(0.0001, t);
+      g.gain.exponentialRampToValueAtTime(vol || 0.2, t + 0.01);
+      g.gain.exponentialRampToValueAtTime(0.0001, t + dur);
+      o.connect(g); g.connect(actx.destination);
+      o.start(t); o.stop(t + dur + 0.05);
+    } catch (e) {}
+  }
+  function tap() { tone(880, 0.06, 0, "sine", 0.12); }
+  function chime() { tone(784, 0.18, 0, "triangle", 0.25); tone(1047, 0.35, 0.16, "triangle", 0.25); }
+  function dingdong() { tone(659, 0.5, 0, "triangle", 0.3); tone(523, 0.7, 0.45, "triangle", 0.3); }
+  function coinSound() { tone(1320, 0.08, 0, "square", 0.06); tone(1760, 0.12, 0.07, "square", 0.06); }
+  function speak(text) {
+    if (!store.sound) return;
+    try {
+      var synth = window.speechSynthesis;
+      if (!synth) return;
+      synth.cancel();
+      var u = new SpeechSynthesisUtterance(text);
+      u.lang = "ko-KR"; u.rate = 0.95; u.pitch = 1.15;
+      var v = synth.getVoices().filter(function (x) { return /^ko/i.test(x.lang); })[0];
+      if (v) u.voice = v;
+      synth.speak(u);
+    } catch (e) {}
+  }
+  document.addEventListener("click", function (e) {
+    var b = e.target.closest("button");
+    if (b && !b.disabled && !b.hasAttribute("data-money")) tap();
+  });
+
+  function toast(msg) {
+    var t = document.createElement("div");
+    t.className = "toast"; t.textContent = msg; t.setAttribute("role", "status");
+    document.body.appendChild(t);
+    setTimeout(function () { t.remove(); }, 1900);
+  }
+
+  /* ───────── 화면 전환 ───────── */
+  var doneTimer = null;
+  function show(id) {
+    $$(".screen").forEach(function (s) { s.hidden = s.id !== id; });
+    if (doneTimer && id !== "s-done") { clearInterval(doneTimer); doneTimer = null; }
+  }
+
+  function applyName() {
+    var n = store.name || "꼬마식당";
+    $("#start-name").textContent = n;
+    $("#menu-name").textContent = n;
+  }
+
+  /* ───────── 시작 화면 ───────── */
+  (function belt() {
+    var em = MENU.map(function (m) { return m.emoji; }).join(" ");
+    $("#belt").innerHTML = "<span>" + em + "</span><span>" + em + "</span>";
+  })();
+
+  function startOrder(place) {
+    state.place = place; state.cart = []; state.cat = "korean";
+    keepAwake();
+    renderPlace(); renderTabs(); renderGrid(); renderCart();
+    show("s-menu");
+    speak(place === "in" ? "여기서 드시는군요. 메뉴를 골라 주세요." : "포장이시군요. 메뉴를 골라 주세요.");
+  }
+  $("#btn-eat-in").addEventListener("click", function () { startOrder("in"); });
+  $("#btn-take-out").addEventListener("click", function () { startOrder("out"); });
+
+  function renderSoundBtn() { $("#btn-sound").textContent = store.sound ? "🔊 소리 켜짐" : "🔇 소리 꺼짐"; }
+  $("#btn-sound").addEventListener("click", function () {
+    store.sound = !store.sound; save(); renderSoundBtn();
+    if (store.sound) chime();
+  });
+
+  $("#btn-full").addEventListener("click", function () {
+    var el = document.documentElement;
+    try {
+      if (document.fullscreenElement || document.webkitFullscreenElement) {
+        (document.exitFullscreen || document.webkitExitFullscreen).call(document);
+      } else {
+        var p = (el.requestFullscreen || el.webkitRequestFullscreen).call(el);
+        if (p && p.catch) p.catch(function () { toast("이 화면에서는 전체 화면을 쓸 수 없어요"); });
+      }
+    } catch (e) { toast("이 화면에서는 전체 화면을 쓸 수 없어요"); }
+  });
+
+  var wakeLock = null;
+  function keepAwake() {
+    try {
+      if (!wakeLock && navigator.wakeLock) {
+        navigator.wakeLock.request("screen").then(function (w) {
+          wakeLock = w; w.addEventListener("release", function () { wakeLock = null; });
+        }).catch(function () {});
+      }
+    } catch (e) {}
+  }
+  document.addEventListener("visibilitychange", function () { if (!document.hidden) { wakeLock = null; keepAwake(); } });
+
+  // 주방 버튼: 꾹 눌러야 열림 (아이가 실수로 들어가지 않게)
+  (function () {
+    var hb = $("#kitchen-hold"), t = null;
+    function cancel() { clearTimeout(t); hb.classList.remove("holding"); }
+    hb.addEventListener("pointerdown", function () {
+      hb.classList.add("holding");
+      t = setTimeout(function () { cancel(); openKitchen(); }, 900);
+    });
+    ["pointerup", "pointerleave", "pointercancel"].forEach(function (ev) { hb.addEventListener(ev, cancel); });
+    hb.addEventListener("contextmenu", function (e) { e.preventDefault(); });
+    hb.addEventListener("click", function (e) { if (e.detail === 0) openKitchen(); else if (!$("#s-kitchen").hidden) return; else toast("주방은 버튼을 꾹 눌러야 열려요"); });
+  })();
+
+  /* ───────── 메뉴 화면 ───────── */
+  function renderPlace() {
+    $("#menu-place").textContent = state.place === "in" ? "🍽️ 여기서 먹어요" : "🛍️ 가져갈래요";
+    $$(".place-switch button").forEach(function (b) { b.setAttribute("aria-pressed", String(b.dataset.place === state.place)); });
+  }
+
+  function renderTabs() {
+    $("#tabs").innerHTML = CATS.map(function (c) {
+      return '<button class="tab" role="tab" type="button" data-cat="' + c.id + '" aria-selected="' + (c.id === state.cat) + '" style="--cat: var(' + c.color + ')">' +
+        '<span class="t-emoji" aria-hidden="true">' + c.emoji + "</span>" + c.name + "</button>";
+    }).join("");
+  }
+  $("#tabs").addEventListener("click", function (e) {
+    var b = e.target.closest("[data-cat]");
+    if (!b) return;
+    state.cat = b.dataset.cat;
+    $$("#tabs .tab").forEach(function (t) { t.setAttribute("aria-selected", String(t === b)); });
+    b.scrollIntoView({ inline: "nearest", block: "nearest" });
+    renderGrid();
+    $("#grid-scroll").scrollTop = 0;
+  });
+
+  function renderGrid() {
+    var c = catOf(state.cat);
+    var items = MENU.filter(function (m) { return m.cat === c.id; });
+    $("#cat-title").textContent = c.emoji + " " + c.name + " 메뉴";
+    $("#cat-count").textContent = items.length + "가지";
+    $("#grid").innerHTML = items.map(function (m) {
+      var sold = isSold(m.id);
+      var tags = (m.tags || []).map(function (t) { return '<span class="tag' + (t === "매워요" ? " hot" : "") + '">' + (t === "매워요" ? "🌶️ " : "") + t + "</span>"; }).join("");
+      return '<button class="item' + (sold ? " sold" : "") + '" type="button" data-item="' + m.id + '" style="--cat: var(' + c.color + ')"' + (sold ? " disabled" : "") + ">" +
+        '<span class="tags">' + tags + "</span>" +
+        '<span class="bubble" aria-hidden="true">' + m.emoji + "</span>" +
+        '<span class="name">' + m.name + "</span>" +
+        '<span class="price num">' + (m.price ? wonHtml(m.price) : "무료!") + "</span>" +
+        (sold ? '<span class="stamp"><span>품절</span></span>' : "") +
+        "</button>";
+    }).join("");
+  }
+  $("#grid").addEventListener("click", function (e) {
+    var b = e.target.closest("[data-item]");
+    if (b && !b.disabled) openSheet(b.dataset.item);
+  });
+
+  /* 메뉴 고르기 창 */
+  function sheetUnit() {
+    var s = state.sheet, add = 0;
+    (s.item.opts || []).forEach(function (k) { add += OPTS[k].choices[s.sel[k]][1]; });
+    return s.item.price + add;
+  }
+  function openSheet(id) {
+    var m = byId(id);
+    var sel = {};
+    (m.opts || []).forEach(function (k) { sel[k] = k === "spicy" ? 1 : 0; });
+    state.sheet = { item: m, sel: sel, qty: 1 };
+    renderSheet();
+    $("#sheet-backdrop").hidden = false;
+    var first = $("#sheet .opt, #sheet [data-q]");
+    if (first) first.focus({ preventScroll: true });
+  }
+  function closeSheet() { $("#sheet-backdrop").hidden = true; state.sheet = null; }
+  function renderSheet() {
+    var s = state.sheet, m = s.item, c = catOf(m.cat);
+    var groups = (m.opts || []).map(function (k) {
+      var g = OPTS[k];
+      return '<div class="opt-group"><h4>' + g.name + ' 고르기</h4><div class="opt-choices">' +
+        g.choices.map(function (ch, i) {
+          return '<button class="opt" type="button" data-g="' + k + '" data-i="' + i + '" aria-pressed="' + (s.sel[k] === i) + '">' + ch[0] +
+            (ch[1] ? "<small>+" + won(ch[1]) + "</small>" : "") + "</button>";
+        }).join("") + "</div></div>";
+    }).join("");
+    var unit = sheetUnit();
+    $("#sheet").innerHTML =
+      '<div class="sheet-hero"><span class="bubble" style="--cat: var(' + c.color + ')" aria-hidden="true">' + m.emoji + "</span>" +
+      '<div><h3 id="sheet-title">' + m.name + '</h3><p>' + m.desc + '</p><div class="price num" style="font-family:var(--font-display);font-size:24px;color:var(--ketchup);margin-top:4px">' + (m.price ? won(m.price) : "무료!") + "</div></div></div>" +
+      groups +
+      '<div class="qty-row"><h4>몇 개 줄까요?</h4><div class="stepper"><button type="button" data-q="-1" aria-label="하나 빼기">−</button><output class="num" aria-live="polite">' + s.qty + '</output><button type="button" data-q="1" aria-label="하나 더하기">+</button></div></div>' +
+      '<div class="sheet-actions"><button class="toy" type="button" data-close>닫기</button>' +
+      '<button class="toy primary" type="button" data-add>담기 · <span class="num">' + won(unit * s.qty) + "</span></button></div>";
+  }
+  $("#sheet").addEventListener("click", function (e) {
+    var s = state.sheet; if (!s) return;
+    var t = e.target.closest("button"); if (!t) return;
+    if (t.dataset.g) { s.sel[t.dataset.g] = +t.dataset.i; renderSheet(); }
+    else if (t.dataset.q) { s.qty = Math.max(1, Math.min(9, s.qty + +t.dataset.q)); renderSheet(); }
+    else if (t.hasAttribute("data-close")) closeSheet();
+    else if (t.hasAttribute("data-add")) addToCart();
+  });
+  $("#sheet-backdrop").addEventListener("click", function (e) { if (e.target === e.currentTarget) closeSheet(); });
+  document.addEventListener("keydown", function (e) { if (e.key === "Escape" && state.sheet) closeSheet(); });
+
+  function addToCart() {
+    var s = state.sheet, m = s.item;
+    var labels = (m.opts || []).map(function (k) { return OPTS[k].choices[s.sel[k]][0]; });
+    var key = m.id + "|" + labels.join("|");
+    var unit = sheetUnit();
+    var line = state.cart.filter(function (l) { return l.key === key; })[0];
+    if (line) line.qty = Math.min(20, line.qty + s.qty);
+    else state.cart.push({ key: key, id: m.id, name: m.name, emoji: m.emoji, opts: labels.join(" · "), unit: unit, qty: s.qty });
+    closeSheet();
+    renderCart(true);
+    chime();
+    toast(m.emoji + " " + m.name + " " + s.qty + "개를 담았어요!");
+  }
+
+  function lineHtml(l, i) {
+    return '<li class="line">' +
+      '<span class="l-emoji" aria-hidden="true">' + l.emoji + "</span>" +
+      '<span class="l-name">' + l.name + (l.opts ? '<span class="l-opt">' + l.opts + "</span>" : "") + "</span>" +
+      '<span class="l-price num">' + won(l.unit * l.qty) + "</span>" +
+      '<span class="stepper"><button type="button" data-line="' + i + '" data-d="-1" aria-label="' + l.name + ' 하나 빼기">' + (l.qty === 1 ? "🗑" : "−") + '</button>' +
+      '<output class="num">' + l.qty + '</output><button type="button" data-line="' + i + '" data-d="1" aria-label="' + l.name + ' 하나 더하기">+</button></span>' +
+      "</li>";
+  }
+  var EMPTY = '<li class="tray-empty"><span class="big" aria-hidden="true">🍽️</span>아직 담은 음식이 없어요.<br>먹고 싶은 메뉴를 눌러 보세요!</li>';
+
+  function renderCart(bump) {
+    var total = cartTotal(), count = cartCount();
+    var html = state.cart.length ? state.cart.map(lineHtml).join("") : EMPTY;
+    $("#tray-list").innerHTML = html;
+    $("#tray-total").textContent = won(total);
+    $("#bar-total").textContent = won(total);
+    $("#bar-count").textContent = count;
+    $("#btn-order").disabled = $("#btn-order-bar").disabled = $("#btn-clear").disabled = !count;
+    if (bump) { var bc = $("#bar-count"); bc.classList.remove("bump"); void bc.offsetWidth; bc.classList.add("bump"); }
+    // 주문 확인 화면
+    $("#confirm-list").innerHTML = html;
+    $("#confirm-total").textContent = won(total);
+    $("#confirm-read").textContent = "(" + readKo(total) + ")";
+    $("#pay-buttons").hidden = total === 0;
+    $("#free-buttons").hidden = total !== 0;
+  }
+  function onStep(e) {
+    var b = e.target.closest("[data-line]"); if (!b) return;
+    var i = +b.dataset.line, l = state.cart[i]; if (!l) return;
+    l.qty += +b.dataset.d;
+    if (l.qty <= 0) state.cart.splice(i, 1);
+    if (l.qty > 20) l.qty = 20;
+    renderCart();
+    if (!state.cart.length && !$("#s-confirm").hidden) show("s-menu");
+  }
+  $("#tray-list").addEventListener("click", onStep);
+  $("#confirm-list").addEventListener("click", onStep);
+
+  var clearArmed = null;
+  $("#btn-clear").addEventListener("click", function () {
+    var b = this;
+    if (clearArmed) { clearTimeout(clearArmed); clearArmed = null; b.textContent = "모두 빼기"; state.cart = []; renderCart(); return; }
+    b.textContent = "정말 뺄까요?";
+    clearArmed = setTimeout(function () { clearArmed = null; b.textContent = "모두 빼기"; }, 2500);
+  });
+
+  function goConfirm() {
+    if (!state.cart.length) return;
+    renderPlace(); renderCart(); show("s-confirm");
+    speak("주문하신 음식을 확인해 주세요. 모두 " + readKo(cartTotal()) + "입니다.");
+  }
+  $("#btn-order").addEventListener("click", goConfirm);
+  $("#btn-order-bar").addEventListener("click", goConfirm);
+  $("#btn-home").addEventListener("click", function () { state.cart = []; show("s-start"); });
+  $("#btn-back-menu").addEventListener("click", function () { show("s-menu"); });
+  $$(".place-switch button").forEach(function (b) {
+    b.addEventListener("click", function () { state.place = b.dataset.place; renderPlace(); });
+  });
+
+  /* ───────── 카드 결제 ───────── */
+  var cardBusy = false, cardTimers = [];
+  function resetCard() {
+    cardTimers.forEach(clearTimeout); cardTimers = []; cardBusy = false;
+    $("#card").classList.remove("in"); $("#card").disabled = false;
+    $("#card-msg").textContent = "카드를 눌러서 꽂아 주세요";
+    $("#card-msg").classList.remove("dots");
+    $("#card-sub").textContent = "결제가 끝날 때까지 카드를 빼지 마세요";
+    $("#term-screen").innerHTML = '<span class="num">' + won(cartTotal()) + "</span>";
+    $$(".term-lights i").forEach(function (i) { i.classList.remove("on"); });
+  }
+  $("#btn-pay-card").addEventListener("click", function () { resetCard(); show("s-card"); speak("카드를 꽂아 주세요."); });
+  $("#btn-card-cancel").addEventListener("click", function () { resetCard(); show("s-confirm"); });
+  $("#card").addEventListener("click", function () {
+    if (cardBusy) return; cardBusy = true;
+    this.classList.add("in"); this.disabled = true;
+    $("#card-msg").textContent = "결제하고 있어요"; $("#card-msg").classList.add("dots");
+    $("#term-screen").textContent = "잠시만요…";
+    ["#light1", "#light2", "#light3"].forEach(function (s, i) {
+      cardTimers.push(setTimeout(function () { $(s).classList.add("on"); tone(600 + i * 200, 0.08); }, 400 + i * 450));
+    });
+    cardTimers.push(setTimeout(function () {
+      $("#card-msg").classList.remove("dots");
+      $("#card-msg").textContent = "결제 완료! 카드를 빼 주세요";
+      $("#term-screen").textContent = "승인 완료 ✔";
+      $("#card-sub").textContent = "";
+      chime();
+    }, 2000));
+    cardTimers.push(setTimeout(function () { finish("card", cartTotal(), 0); }, 3300));
+  });
+
+  /* ───────── 현금 결제 ───────── */
+  function renderCash() {
+    var total = cartTotal();
+    var paid = state.cash.reduce(function (s, m) { return s + m; }, 0);
+    $("#cash-total").textContent = won(total);
+    $("#cash-paid").textContent = won(paid);
+    var counts = {};
+    state.cash.forEach(function (m) { counts[m] = (counts[m] || 0) + 1; });
+    $("#cash-pile").innerHTML = MONEY.filter(function (m) { return counts[m]; }).map(function (m) {
+      return '<span class="chip num">' + won(m) + " × " + counts[m] + "</span>";
+    }).join("");
+    var enough = paid >= total;
+    $("#cash-need-row").hidden = enough;
+    $("#cash-change-row").hidden = !enough;
+    $("#cash-need").textContent = won(Math.max(0, total - paid));
+    $("#cash-change").textContent = won(Math.max(0, paid - total));
+    var box = $("#change-box");
+    if (enough && paid > total) {
+      box.hidden = false;
+      box.innerHTML = "<b>거스름돈 주는 법</b><br>" + breakDown(paid - total).map(function (p) {
+        return won(p[0]) + (p[0] >= 1000 ? " 지폐 " : " 동전 ") + p[1] + (p[0] >= 1000 ? "장" : "개");
+      }).join(", ");
+    } else box.hidden = true;
+    $("#cash-hint").textContent = !paid ? "돈을 눌러서 내 보세요!" : enough ? (paid === total ? "딱 맞게 냈어요! 👏" : "거스름돈을 받아 가세요!") : "조금 더 내야 해요.";
+    $("#btn-cash-done").disabled = !enough;
+  }
+  $("#btn-pay-cash").addEventListener("click", function () { state.cash = []; renderCash(); show("s-cash"); speak("돈을 내 주세요."); });
+  $("#btn-cash-cancel").addEventListener("click", function () { state.cash = []; show("s-confirm"); });
+  $("#btn-cash-reset").addEventListener("click", function () { state.cash = []; renderCash(); });
+  $$("[data-money]").forEach(function (b) {
+    b.addEventListener("click", function () {
+      if (state.cash.length >= 60) return;
+      state.cash.push(+b.dataset.money); coinSound(); renderCash();
+    });
+  });
+  $("#btn-cash-done").addEventListener("click", function () {
+    var total = cartTotal();
+    var paid = state.cash.reduce(function (s, m) { return s + m; }, 0);
+    if (paid < total) return;
+    finish("cash", paid, paid - total);
+  });
+  $("#btn-pay-free").addEventListener("click", function () { finish("free", 0, 0); });
+
+  /* ───────── 주문 완료 ───────── */
+  function finish(pay, paid, change) {
+    var order = {
+      no: store.nextNo,
+      time: Date.now(),
+      place: state.place,
+      items: state.cart.map(function (l) { return { name: l.name, emoji: l.emoji, opts: l.opts, qty: l.qty, unit: l.unit }; }),
+      total: cartTotal(),
+      pay: pay, paid: paid, change: change,
+      status: "cooking"
+    };
+    store.orders.unshift(order);
+    if (store.orders.length > 200) store.orders.length = 200;
+    store.nextNo = store.nextNo >= 999 ? 1 : store.nextNo + 1;
+    save();
+
+    var payName = { card: "💳 카드", cash: "💵 현금", free: "🎁 무료" }[pay];
+    $("#receipt").innerHTML =
+      '<div class="r-title">' + esc(store.name || "꼬마식당") + " · 주문 번호</div>" +
+      '<div class="r-no num">' + order.no + "</div>" +
+      '<div class="r-place"><span class="chip mustard">' + (order.place === "in" ? "🍽️ 여기서 먹어요" : "🛍️ 가져갈래요") + '</span> <span class="chip">' + payName + "</span></div>" +
+      "<ul>" + order.items.map(function (it) {
+        return "<li><span>" + it.emoji + " " + it.name + " × " + it.qty + "</span><span class=\"num\">" + won(it.unit * it.qty) + "</span></li>";
+      }).join("") + "</ul>" +
+      '<div class="r-total"><span>합계</span><span class="num">' + won(order.total) + "</span></div>" +
+      (pay === "cash" ? '<div class="r-total" style="font-size:18px;border:0;margin-top:4px;padding-top:0"><span>받은 돈 / 거스름돈</span><span class="num">' + won(paid) + " / " + won(change) + "</span></div>" : "");
+
+    var hasFortune = order.items.some(function (it) { return it.name === "포춘쿠키"; });
+    var f = $("#fortune");
+    f.hidden = !hasFortune;
+    if (hasFortune) f.textContent = "🥠 오늘의 운세: " + FORTUNES[Math.floor(Math.random() * FORTUNES.length)];
+
+    state.cart = []; state.cash = [];
+    renderCart();
+    show("s-done");
+    chime();
+    setTimeout(function () { speak("주문이 완료되었습니다. 주문 번호는 " + order.no + "번입니다."); }, 500);
+
+    var left = 20;
+    $("#done-count").textContent = left;
+    doneTimer = setInterval(function () {
+      left--; $("#done-count").textContent = left;
+      if (left <= 0) show("s-start");
+    }, 1000);
+  }
+  $("#btn-done-home").addEventListener("click", function () { show("s-start"); });
+
+  /* ───────── 주방 ───────── */
+  function openKitchen() {
+    if (window.speechSynthesis) try { speechSynthesis.cancel(); } catch (e) {}
+    closeSheet();
+    $("#set-name").value = store.name;
+    renderKitchen();
+    show("s-kitchen");
+  }
+  function hhmm(t) { var d = new Date(t); return d.getHours() + ":" + String(d.getMinutes()).padStart(2, "0"); }
+
+  function renderKitchen() {
+    var cooking = store.orders.filter(function (o) { return o.status === "cooking"; }).reverse();
+    var done = store.orders.filter(function (o) { return o.status === "done"; }).slice(0, 12);
+    var sales = store.orders.reduce(function (s, o) { return s + o.total; }, 0);
+    function ticket(o) {
+      var payName = { card: "카드", cash: "현금", free: "무료" }[o.pay];
+      return '<article class="ticket' + (o.status === "done" ? " done" : "") + '">' +
+        '<div class="ticket-head"><span class="no num">' + o.no + '번</span><span class="meta">' + hhmm(o.time) + "<br>" +
+        (o.place === "in" ? "🍽️ 매장" : "🛍️ 포장") + " · " + payName + "</span></div>" +
+        "<ul>" + o.items.map(function (it) {
+          return "<li>" + it.emoji + " <b>" + it.name + "</b> × " + it.qty + (it.opts ? "<small>" + it.opts + "</small>" : "") + "</li>";
+        }).join("") + "</ul>" +
+        '<div class="num" style="color:var(--muted)">' + won(o.total) + "</div>" +
+        (o.status === "cooking"
+          ? '<button class="toy go small" type="button" data-serve="' + o.no + '" data-time="' + o.time + '">📣 요리 완료! 부르기</button>'
+          : '<button class="toy small" type="button" data-call="' + o.no + '">🔁 다시 부르기</button>') +
+        "</article>";
+    }
+    $("#k-orders").innerHTML =
+      '<div class="k-stats">' +
+      '<div class="k-stat"><b class="num">' + cooking.length + "</b><span>요리할 주문</span></div>" +
+      '<div class="k-stat"><b class="num">' + store.orders.filter(function (o) { return o.status === "done"; }).length + "</b><span>나간 주문</span></div>" +
+      '<div class="k-stat"><b class="num">' + won(sales) + "</b><span>번 돈</span></div></div>" +
+      (cooking.length ? '<div class="k-section"><h3>🔥 요리할 주문</h3><div class="tickets">' + cooking.map(ticket).join("") + "</div></div>"
+        : '<div class="k-empty"><span class="big" aria-hidden="true">🧑‍🍳</span>들어온 주문이 없어요. 손님을 기다려요!</div>') +
+      (done.length ? '<div class="k-section"><h3>✅ 나간 주문</h3><div class="tickets">' + done.map(ticket).join("") + "</div></div>" : "");
+
+    $("#k-sold").innerHTML = '<p style="margin:0 0 14px;color:var(--muted)">누르면 품절이 돼요. 한 번 더 누르면 다시 팔아요.</p>' +
+      CATS.map(function (c) {
+        return '<div class="k-section"><h3>' + c.emoji + " " + c.name + '</h3><div class="sold-grid">' +
+          MENU.filter(function (m) { return m.cat === c.id; }).map(function (m) {
+            return '<button class="sold-toggle" type="button" data-sold="' + m.id + '" aria-pressed="' + isSold(m.id) + '">' + m.emoji + " " + m.name + "</button>";
+          }).join("") + "</div></div>";
+      }).join("");
+
+    $("#set-next").textContent = store.nextNo;
+  }
+
+  $("#k-orders").addEventListener("click", function (e) {
+    var s = e.target.closest("[data-serve]"), c = e.target.closest("[data-call]");
+    if (s) {
+      var no = +s.dataset.serve, t = +s.dataset.time;
+      store.orders.forEach(function (o) { if (o.no === no && o.time === t) o.status = "done"; });
+      save(); renderKitchen(); callNumber(no);
+    } else if (c) callNumber(+c.dataset.call);
+  });
+  function callNumber(no) {
+    dingdong();
+    setTimeout(function () { speak(no + "번 손님, 주문하신 음식 나왔습니다!"); }, 1100);
+    toast("📣 " + no + "번 손님을 불렀어요");
+  }
+  $("#k-sold").addEventListener("click", function (e) {
+    var b = e.target.closest("[data-sold]"); if (!b) return;
+    var id = b.dataset.sold, i = store.soldOut.indexOf(id);
+    if (i === -1) store.soldOut.push(id); else store.soldOut.splice(i, 1);
+    save();
+    b.setAttribute("aria-pressed", String(i === -1));
+  });
+  $$("[data-ktab]").forEach(function (b) {
+    b.addEventListener("click", function () {
+      state.ktab = b.dataset.ktab;
+      $$("[data-ktab]").forEach(function (x) { x.setAttribute("aria-selected", String(x === b)); });
+      ["orders", "sold", "settings"].forEach(function (k) { $("#k-" + k).hidden = k !== state.ktab; });
+    });
+  });
+  $("#set-name").addEventListener("input", function () {
+    store.name = this.value.trim() || "꼬마식당"; save(); applyName();
+  });
+  function armed(btn, label, action) {
+    var t = null;
+    btn.addEventListener("click", function () {
+      if (t) { clearTimeout(t); t = null; btn.classList.remove("armed"); btn.textContent = label; action(); return; }
+      btn.classList.add("armed"); btn.textContent = "한 번 더 누르면 실행돼요";
+      t = setTimeout(function () { t = null; btn.classList.remove("armed"); btn.textContent = label; }, 3000);
+    });
+  }
+  armed($("#btn-reset-no"), "1번부터 다시 시작", function () { store.nextNo = 1; save(); renderKitchen(); toast("다음 주문은 1번이에요"); });
+  armed($("#btn-wipe"), "주문 기록 모두 지우기", function () { store.orders = []; store.nextNo = 1; save(); renderKitchen(); toast("주문 기록을 지웠어요"); });
+  $("#btn-kitchen-exit").addEventListener("click", function () { show("s-start"); });
+
+  // 다른 탭에서 주문이 들어오면 주방 화면 갱신
+  window.addEventListener("storage", function (e) {
+    if (e.key !== KEY) return;
+    try { var s = JSON.parse(e.newValue || "null"); if (s) Object.keys(s).forEach(function (k) { store[k] = s[k]; }); } catch (err) {}
+    if (!$("#s-kitchen").hidden) renderKitchen();
+    applyName();
+  });
+
+  /* ───────── 시작 ───────── */
+  if (window.speechSynthesis) try { speechSynthesis.getVoices(); } catch (e) {}
+  applyName();
+  renderSoundBtn();
+  renderTabs();
+  renderGrid();
+  renderCart();
+})();
+</script>
+</body>
+</html>
