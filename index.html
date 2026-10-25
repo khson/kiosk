@@ -4,11 +4,11 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
 <!-- ARTIFACT-START -->
-<title>지우식당 키오스크</title>
+<title>지우네식당 키오스크</title>
 <meta name="claude:viewport-fit-sides" content="cover">
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-capable" content="yes">
-<meta name="apple-mobile-web-app-title" content="지우식당">
+<meta name="apple-mobile-web-app-title" content="지우네식당">
 <meta name="theme-color" content="#E3432B">
 <link rel="manifest" href="manifest.webmanifest">
 <link rel="icon" href="icon.svg" type="image/svg+xml">
@@ -527,7 +527,7 @@ h1, h2, h3 { font-family: var(--font-display); font-weight: 400; margin: 0; text
 <section class="screen" id="s-start" aria-label="시작">
   <div class="start-sign">
     <div class="awning" aria-hidden="true"></div>
-    <h1 id="start-name">지우식당</h1>
+    <h1 id="start-name">지우네식당</h1>
     <p>어서 오세요! 어디서 드실 건가요?</p>
   </div>
   <div class="mode-switch" role="group" aria-label="모드 고르기">
@@ -551,7 +551,7 @@ h1, h2, h3 { font-family: var(--font-display); font-weight: 400; margin: 0; text
 <!-- 메뉴 -->
 <section class="screen" id="s-menu" aria-label="메뉴 고르기" hidden>
   <header class="topbar">
-    <div class="brand"><span class="brand-mark" aria-hidden="true">🍳</span><span class="brand-name" id="menu-name">지우식당</span></div>
+    <div class="brand"><span class="brand-mark" aria-hidden="true">🍳</span><span class="brand-name" id="menu-name">지우네식당</span></div>
     <span class="chip" id="menu-mode" hidden>✏️ 공부 모드</span>
     <span class="chip mustard" id="menu-place">🍽️ 여기서 먹어요</span>
     <button class="toy small" id="btn-home" type="button">🏠 처음으로</button>
@@ -818,7 +818,7 @@ h1, h2, h3 { font-family: var(--font-display); font-weight: 400; margin: 0; text
   /* ───────── 저장소 ───────── */
   var KEY = "kkoma-kiosk-v1";
   var store = (function () {
-    var d = { orders: [], nextNo: 1, soldOut: [], sound: true, name: "지우식당", mode: "play", quiz: { total: 0, firstTry: 0 } };
+    var d = { orders: [], nextNo: 1, soldOut: [], sound: true, name: "지우네식당", mode: "play", quiz: { total: 0, firstTry: 0 } };
     try {
       var s = JSON.parse(localStorage.getItem(KEY) || "null");
       if (s && typeof s === "object") Object.keys(d).forEach(function (k) { if (k in s) d[k] = s[k]; });
@@ -827,7 +827,7 @@ h1, h2, h3 { font-family: var(--font-display); font-weight: 400; margin: 0; text
   })();
   function save() { try { localStorage.setItem(KEY, JSON.stringify(store)); } catch (e) {} }
   // 예전 기본 이름이 저장돼 있으면 새 이름으로 바꿈
-  if (store.name === "꼬마식당") { store.name = "지우식당"; save(); }
+  if (store.name === "꼬마식당" || store.name === "지우식당") { store.name = "지우네식당"; save(); }
 
   var state = {
     place: "in", cat: "korean", cart: [], cash: [], sheet: null, ktab: "orders",
@@ -931,7 +931,7 @@ h1, h2, h3 { font-family: var(--font-display); font-weight: 400; margin: 0; text
   }
 
   function applyName() {
-    var n = store.name || "지우식당";
+    var n = store.name || "지우네식당";
     $("#start-name").textContent = n;
     $("#menu-name").textContent = n;
   }
@@ -1412,7 +1412,7 @@ h1, h2, h3 { font-family: var(--font-display); font-weight: 400; margin: 0; text
 
     var payName = { card: "💳 카드", cash: "💵 현금", free: "🎁 무료" }[pay];
     $("#receipt").innerHTML =
-      '<div class="r-title">' + esc(store.name || "지우식당") + " · 주문 번호</div>" +
+      '<div class="r-title">' + esc(store.name || "지우네식당") + " · 주문 번호</div>" +
       '<div class="r-no num">' + order.no + "</div>" +
       '<div class="r-place"><span class="chip mustard">' + (order.place === "in" ? "🍽️ 여기서 먹어요" : "🛍️ 가져갈래요") + '</span> <span class="chip">' + payName + "</span></div>" +
       "<ul>" + order.items.map(function (it) {
@@ -1527,7 +1527,7 @@ h1, h2, h3 { font-family: var(--font-display); font-weight: 400; margin: 0; text
     });
   });
   $("#set-name").addEventListener("input", function () {
-    store.name = this.value.trim() || "지우식당"; save(); applyName();
+    store.name = this.value.trim() || "지우네식당"; save(); applyName();
   });
   function armed(btn, label, action) {
     var t = null;

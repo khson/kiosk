@@ -1,6 +1,6 @@
 {
-  "name": "지우식당 키오스크",
-  "short_name": "지우식당",
+  "name": "지우네식당 키오스크",
+  "short_name": "지우네식당",
   "lang": "ko",
   "start_url": "./index.html",
   "display": "fullscreen",
