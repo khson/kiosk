@@ -303,7 +303,7 @@ h1, h2, h3 { font-family: var(--font-display); font-weight: 400; margin: 0; text
 .confirm-list .line .l-name { font-size: 24px; }
 .confirm-list .line .stepper { grid-column: 3; grid-row: 1; justify-self: end; }
 .confirm-list .line .l-price { font-size: 22px; min-width: 96px; grid-column: 4; grid-row: 1; }
-.confirm-side { display: flex; flex-direction: column; gap: 14px; min-height: 0; }
+.confirm-side { display: flex; flex-direction: column; gap: 14px; min-height: 0; overflow-y: auto; padding-bottom: 6px; }
 .summary { background: var(--surface); border-radius: var(--r-lg); box-shadow: var(--shadow); padding: 20px; display: flex; flex-direction: column; gap: 12px; }
 .summary .big-total { font-family: var(--font-display); font-size: 48px; color: var(--ketchup); line-height: 1.1; }
 .summary .read { color: var(--muted); font-size: 18px; }
@@ -417,6 +417,36 @@ h1, h2, h3 { font-family: var(--font-display); font-weight: 400; margin: 0; text
 .done-actions { display: flex; flex-direction: column; align-items: center; gap: 8px; }
 .done-actions small { color: var(--muted); }
 
+/* ── 공부 모드: 모드 고르기, 계산 문제 ── */
+.mode-switch { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; width: min(760px, 100%); background: var(--surface); padding: 6px; border-radius: 22px; box-shadow: var(--shadow); }
+.mode-switch button { border: 0; background: transparent; border-radius: 16px; padding: 10px 12px; font-family: var(--font-display); font-size: 22px; display: flex; flex-direction: column; align-items: center; gap: 2px; }
+.mode-switch button small { font-family: var(--font-body); font-size: 14px; color: var(--muted); }
+.mode-switch button[aria-pressed="true"] { background: var(--mustard); color: var(--on-mustard); box-shadow: 0 4px 0 color-mix(in srgb, var(--mustard) 60%, #000); }
+.mode-switch button[aria-pressed="true"] small { color: var(--on-mustard); }
+.quiz { background: var(--surface); border-radius: var(--r-lg); box-shadow: var(--shadow); padding: 18px; display: flex; flex-direction: column; gap: 10px; }
+#quiz-sub { align-self: start; justify-self: center; width: 100%; max-width: 560px; }
+.quiz-q { font-family: var(--font-display); font-size: 22px; line-height: 1.3; }
+.quiz-q small { display: block; font-family: var(--font-body); font-size: 15px; color: var(--muted); }
+.quiz-expr { font-family: var(--font-display); font-size: 24px; text-align: center; background: var(--surface-2); border-radius: 14px; padding: 8px 12px; overflow-wrap: anywhere; line-height: 1.3; }
+.quiz-display { display: flex; justify-content: center; align-items: baseline; gap: 4px; min-height: 76px; border: 3px dashed var(--line); border-radius: 16px; padding: 4px 14px; font-family: var(--font-display); font-size: 46px; }
+.quiz-display .v.empty { color: var(--muted); }
+.quiz-display .u { font-size: 24px; }
+.quiz.right .quiz-display { border-style: solid; border-color: var(--mint); color: var(--mint); }
+.quiz.wrong .quiz-display { border-style: solid; border-color: var(--ketchup); color: var(--ketchup); animation: shake .4s; }
+@keyframes shake { 20%, 60% { transform: translateX(-8px); } 40%, 80% { transform: translateX(8px); } }
+.quiz-msg { min-height: 1.5em; font-family: var(--font-display); font-size: 19px; text-align: center; color: var(--muted); }
+.quiz-msg.ok { color: var(--mint); }
+.quiz-msg.no { color: var(--ketchup); }
+.keypad { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
+.key { border: 0; border-radius: 14px; min-height: 54px; background: var(--surface-2); font-family: var(--font-display); font-size: 28px; box-shadow: 0 3px 0 var(--line); }
+.key:active:not(:disabled) { transform: translateY(3px); box-shadow: none; }
+.key:disabled { opacity: .4; }
+.key[data-k="del"] { font-family: var(--font-body); font-size: 26px; }
+.quiz-actions { display: grid; gap: 8px; }
+.quiz-actions .toy { width: 100%; }
+.study-result { width: min(440px, 100%); background: color-mix(in srgb, var(--mint) 14%, var(--surface)); border-radius: 18px; padding: 14px 18px; display: flex; flex-direction: column; gap: 4px; text-align: left; }
+.study-result b { font-family: var(--font-display); font-weight: 400; font-size: 20px; }
+
 /* ── 주방 ── */
 #s-kitchen .tabs { padding-bottom: 14px; }
 #s-kitchen .tab { --cat: var(--ink); min-height: 54px; font-size: 20px; }
@@ -481,6 +511,10 @@ h1, h2, h3 { font-family: var(--font-display); font-weight: 400; margin: 0; text
   .start-choices .toy .big-emoji { font-size: 50px; }
   .receipt .r-no { font-size: 96px; }
   .start-tools { position: static; justify-content: center; }
+  .mode-switch button { font-size: 18px; }
+  .quiz-expr { font-size: 22px; }
+  .quiz-display { font-size: 38px; min-height: 64px; }
+  .key { min-height: 52px; }
 }
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after { animation-duration: .01ms !important; animation-iteration-count: 1 !important; transition-duration: .01ms !important; }
@@ -495,6 +529,10 @@ h1, h2, h3 { font-family: var(--font-display); font-weight: 400; margin: 0; text
     <div class="awning" aria-hidden="true"></div>
     <h1 id="start-name">지우식당</h1>
     <p>어서 오세요! 어디서 드실 건가요?</p>
+  </div>
+  <div class="mode-switch" role="group" aria-label="모드 고르기">
+    <button type="button" data-mode="play">🎮 놀이 모드<small>계산은 키오스크가 해 줘요</small></button>
+    <button type="button" data-mode="study">✏️ 공부 모드<small>합계와 거스름돈을 직접 계산해요</small></button>
   </div>
   <div class="start-choices">
     <button class="toy primary" id="btn-eat-in" type="button"><span class="big-emoji" aria-hidden="true">🍽️</span>여기서 먹어요<small>식당에서 먹고 가요</small></button>
@@ -514,6 +552,7 @@ h1, h2, h3 { font-family: var(--font-display); font-weight: 400; margin: 0; text
 <section class="screen" id="s-menu" aria-label="메뉴 고르기" hidden>
   <header class="topbar">
     <div class="brand"><span class="brand-mark" aria-hidden="true">🍳</span><span class="brand-name" id="menu-name">지우식당</span></div>
+    <span class="chip" id="menu-mode" hidden>✏️ 공부 모드</span>
     <span class="chip mustard" id="menu-place">🍽️ 여기서 먹어요</span>
     <button class="toy small" id="btn-home" type="button">🏠 처음으로</button>
   </header>
@@ -552,12 +591,13 @@ h1, h2, h3 { font-family: var(--font-display); font-weight: 400; margin: 0; text
           <button type="button" data-place="in">🍽️ 여기서 먹어요</button>
           <button type="button" data-place="out">🛍️ 가져갈래요</button>
         </div>
-        <div>
+        <div id="confirm-total-box">
           <div style="color: var(--muted)">내야 할 돈</div>
           <div class="big-total num" id="confirm-total">0원</div>
           <div class="read" id="confirm-read"></div>
         </div>
       </div>
+      <div class="quiz" id="quiz-add" hidden></div>
       <div class="pay-buttons" id="pay-buttons">
         <button class="toy primary" id="btn-pay-card" type="button"><span class="big-emoji" aria-hidden="true">💳</span>카드로 낼게요</button>
         <button class="toy go" id="btn-pay-cash" type="button"><span class="big-emoji" aria-hidden="true">💵</span>현금으로 낼게요</button>
@@ -600,7 +640,7 @@ h1, h2, h3 { font-family: var(--font-display); font-weight: 400; margin: 0; text
       <div class="cash-row"><span>내야 할 돈</span><span class="won num" id="cash-total">0원</span></div>
       <div class="cash-row"><span>낸 돈</span><span class="won num" id="cash-paid">0원</span></div>
       <div class="cash-pile" id="cash-pile"></div>
-      <div class="cash-row need" id="cash-need-row"><span>더 내야 해요</span><span class="won num" id="cash-need">0원</span></div>
+      <div class="cash-row need" id="cash-need-row"><span id="cash-need-label">더 내야 해요</span><span class="won num" id="cash-need">0원</span></div>
       <div class="cash-row change" id="cash-change-row" hidden><span>거스름돈</span><span class="won num" id="cash-change">0원</span></div>
       <div class="change-box" id="change-box" hidden></div>
       <p class="cash-hint" id="cash-hint">돈을 눌러서 내 보세요!</p>
@@ -623,6 +663,7 @@ h1, h2, h3 { font-family: var(--font-display); font-weight: 400; margin: 0; text
         <button class="coin c500" type="button" data-money="500">500원</button>
       </div>
     </div>
+    <div class="quiz" id="quiz-sub" hidden></div>
   </div>
 </section>
 
@@ -630,6 +671,7 @@ h1, h2, h3 { font-family: var(--font-display); font-weight: 400; margin: 0; text
 <section class="screen" id="s-done" aria-label="주문 완료" hidden>
   <div class="receipt" id="receipt"></div>
   <div class="fortune" id="fortune" hidden></div>
+  <div class="study-result" id="study-result" hidden></div>
   <p class="done-msg">음식이 나오면 번호를 불러 드릴게요!</p>
   <div class="done-actions">
     <button class="toy primary" id="btn-done-home" type="button">🏠 처음으로</button>
@@ -776,7 +818,7 @@ h1, h2, h3 { font-family: var(--font-display); font-weight: 400; margin: 0; text
   /* ───────── 저장소 ───────── */
   var KEY = "kkoma-kiosk-v1";
   var store = (function () {
-    var d = { orders: [], nextNo: 1, soldOut: [], sound: true, name: "지우식당" };
+    var d = { orders: [], nextNo: 1, soldOut: [], sound: true, name: "지우식당", mode: "play", quiz: { total: 0, firstTry: 0 } };
     try {
       var s = JSON.parse(localStorage.getItem(KEY) || "null");
       if (s && typeof s === "object") Object.keys(d).forEach(function (k) { if (k in s) d[k] = s[k]; });
@@ -787,7 +829,13 @@ h1, h2, h3 { font-family: var(--font-display); font-weight: 400; margin: 0; text
   // 예전 기본 이름이 저장돼 있으면 새 이름으로 바꿈
   if (store.name === "꼬마식당") { store.name = "지우식당"; save(); }
 
-  var state = { place: "in", cat: "korean", cart: [], cash: [], sheet: null, ktab: "orders" };
+  var state = {
+    place: "in", cat: "korean", cart: [], cash: [], sheet: null, ktab: "orders",
+    quizLog: {},                         // 이번 주문의 공부 결과 { add: {tries, revealed}, sub: {...} }
+    addSig: null, addSolved: false, addBuilt: false,
+    subFor: null, subSolved: false
+  };
+  function study() { return store.mode === "study"; }
 
   /* ───────── 도구 ───────── */
   function $(s) { return document.querySelector(s); }
@@ -848,6 +896,7 @@ h1, h2, h3 { font-family: var(--font-display); font-weight: 400; margin: 0; text
   function tap() { tone(880, 0.06, 0, "sine", 0.12); }
   function chime() { tone(784, 0.18, 0, "triangle", 0.25); tone(1047, 0.35, 0.16, "triangle", 0.25); }
   function dingdong() { tone(659, 0.5, 0, "triangle", 0.3); tone(523, 0.7, 0.45, "triangle", 0.3); }
+  function buzz() { tone(220, 0.22, 0, "sawtooth", 0.07); tone(175, 0.3, 0.14, "sawtooth", 0.07); }
   function coinSound() { tone(1320, 0.08, 0, "square", 0.06); tone(1760, 0.12, 0.07, "square", 0.06); }
   function speak(text) {
     if (!store.sound) return;
@@ -895,6 +944,7 @@ h1, h2, h3 { font-family: var(--font-display); font-weight: 400; margin: 0; text
 
   function startOrder(place) {
     state.place = place; state.cart = []; state.cat = "korean";
+    state.quizLog = {}; state.addSig = null; state.addSolved = false;
     keepAwake();
     renderPlace(); renderTabs(); renderGrid(); renderCart();
     show("s-menu");
@@ -902,6 +952,17 @@ h1, h2, h3 { font-family: var(--font-display); font-weight: 400; margin: 0; text
   }
   $("#btn-eat-in").addEventListener("click", function () { startOrder("in"); });
   $("#btn-take-out").addEventListener("click", function () { startOrder("out"); });
+
+  function renderMode() {
+    $$(".mode-switch button").forEach(function (b) { b.setAttribute("aria-pressed", String(b.dataset.mode === store.mode)); });
+    $("#menu-mode").hidden = !study();
+  }
+  $$(".mode-switch button").forEach(function (b) {
+    b.addEventListener("click", function () {
+      store.mode = b.dataset.mode; save(); renderMode();
+      speak(study() ? "공부 모드예요. 합계와 거스름돈을 직접 계산해요." : "놀이 모드예요. 계산은 키오스크가 해 줄게요.");
+    });
+  });
 
   function renderSoundBtn() { $("#btn-sound").textContent = store.sound ? "🔊 소리 켜짐" : "🔇 소리 꺼짐"; }
   $("#btn-sound").addEventListener("click", function () {
@@ -945,6 +1006,108 @@ h1, h2, h3 { font-family: var(--font-display); font-weight: 400; margin: 0; text
     hb.addEventListener("contextmenu", function (e) { e.preventDefault(); });
     hb.addEventListener("click", function (e) { if (e.detail === 0) openKitchen(); else if (!$("#s-kitchen").hidden) return; else toast("주방은 버튼을 꾹 눌러야 열려요"); });
   })();
+
+  /* ───────── 공부 모드: 계산 문제 ───────── */
+  function fmt(n) { return n.toLocaleString("ko-KR"); }
+
+  // 숫자 패드로 답을 입력하고 정답을 확인하는 문제 하나를 root 안에 만든다
+  function makeQuiz(root, o) {
+    var q = { v: "", tries: 0, done: false, stale: false };
+    root.classList.remove("right", "wrong");
+    root.innerHTML =
+      '<div class="quiz-q">' + o.title + (o.sub ? "<small>" + o.sub + "</small>" : "") + "</div>" +
+      '<div class="quiz-expr num">' + o.expr + " = ?</div>" +
+      '<div class="quiz-display"><span class="v num">?</span><span class="u">원</span></div>' +
+      '<div class="quiz-msg" role="status" aria-live="polite">숫자를 눌러서 답을 써 보세요</div>' +
+      '<div class="keypad">' + ["1", "2", "3", "4", "5", "6", "7", "8", "9", "del", "0", "000"].map(function (k) {
+        return '<button class="key" type="button" data-k="' + k + '"' + (k === "del" ? ' aria-label="한 칸 지우기">⌫' : ">" + k) + "</button>";
+      }).join("") + "</div>" +
+      '<div class="quiz-actions"><button class="toy go" type="button" data-k="ok">확인 ✔</button>' +
+      '<button class="toy small" type="button" data-k="reveal" hidden>정답 보기</button></div>';
+    var disp = root.querySelector(".v"), msg = root.querySelector(".quiz-msg"), reveal = root.querySelector('[data-k="reveal"]');
+    function draw() { disp.textContent = q.v ? fmt(+q.v) : "?"; disp.classList.toggle("empty", !q.v); }
+    function say(t, cls) { msg.textContent = t; msg.className = "quiz-msg" + (cls ? " " + cls : ""); }
+    function solved(revealed) {
+      q.done = true;
+      root.classList.remove("wrong"); root.classList.add("right");
+      $$("#" + root.id + " .key, #" + root.id + ' [data-k="ok"]').forEach(function (b) { b.disabled = true; });
+      reveal.hidden = true;
+      o.onSolved({ tries: q.tries + (revealed ? 0 : 1), revealed: revealed });
+    }
+    q.press = function (k) {
+      if (q.done) return;
+      root.classList.remove("wrong");
+      if (k === "ok") {
+        if (!q.v || q.stale) { say("숫자를 눌러서 답을 써 주세요 ✏️"); return; }
+        var n = +q.v;
+        if (n === o.answer) {
+          say("정답이에요! 참 잘했어요 🎉", "ok"); chime(); speak("정답이에요! 참 잘했어요."); solved(false);
+        } else {
+          q.tries++; q.stale = true;
+          void root.offsetWidth; root.classList.add("wrong"); buzz();
+          say(n > o.answer ? "앗, 정답보다 커요. 더 작은 수예요 ⬇" : "앗, 정답보다 작아요. 더 큰 수예요 ⬆", "no");
+          speak(n > o.answer ? "정답보다 커요. 다시 해 볼까요?" : "정답보다 작아요. 다시 해 볼까요?");
+          if (q.tries >= 3) reveal.hidden = false;
+        }
+        return;
+      }
+      if (k === "reveal") {
+        q.v = String(o.answer); q.stale = false; draw();
+        say("정답은 " + won(o.answer) + "이에요. 다음엔 꼭 맞혀 봐요! 💪", "ok"); solved(true);
+        return;
+      }
+      if (q.stale) { q.v = ""; q.stale = false; }
+      if (k === "del") q.v = q.v.slice(0, -1);
+      else {
+        if (!q.v && (k === "0" || k === "000")) return;
+        if ((q.v + k).length > 7) return;
+        q.v += k;
+      }
+      draw();
+    };
+    root.onclick = function (e) { var b = e.target.closest("[data-k]"); if (b && !b.disabled) q.press(b.dataset.k); };
+    root._quiz = q;
+    draw();
+    return q;
+  }
+  // 실제 키보드로도 답을 쓸 수 있게
+  document.addEventListener("keydown", function (e) {
+    if (e.target.closest && e.target.closest("input")) return;
+    var root = ["#quiz-add", "#quiz-sub"].map($).filter(function (r) { return r._quiz && r.offsetParent; })[0];
+    if (!root) return;
+    var k = /^[0-9]$/.test(e.key) ? e.key : e.key === "Backspace" ? "del" : e.key === "Enter" ? "ok" : null;
+    if (k) { e.preventDefault(); root._quiz.press(k); }
+  });
+
+  // 더하기 식: 같은 메뉴 여러 개는 풀어서 더하고, 너무 길면 줄마다 합친 금액으로
+  function addTerms() {
+    var lines = state.cart.filter(function (l) { return l.unit > 0; }), terms = [];
+    lines.forEach(function (l) { for (var i = 0; i < l.qty; i++) terms.push(l.unit); });
+    if (terms.length > 6) terms = lines.map(function (l) { return l.unit * l.qty; });
+    return terms;
+  }
+  function cartSig() { return state.cart.map(function (l) { return l.key + "x" + l.qty; }).join(","); }
+
+  function renderConfirmMath() {
+    var total = cartTotal(), sig = cartSig();
+    if (sig !== state.addSig) { state.addSig = sig; state.addSolved = false; state.addBuilt = false; }
+    var needQuiz = study() && total > 0 && !state.addSolved;
+    if (needQuiz && !state.addBuilt) {
+      state.addBuilt = true;
+      makeQuiz($("#quiz-add"), {
+        title: "합계는 얼마일까요?", sub: "주문한 음식 값을 모두 더해 보세요",
+        expr: addTerms().map(fmt).join(" + "), answer: total,
+        onSolved: function (r) {
+          state.addSolved = true; state.quizLog.add = r;
+          setTimeout(function () { if (state.addSig === sig) renderConfirmMath(); }, 1300);
+        }
+      });
+    }
+    $("#confirm-total-box").hidden = needQuiz;
+    $("#quiz-add").hidden = !needQuiz;
+    $("#pay-buttons").hidden = total === 0 || needQuiz;
+    $("#free-buttons").hidden = total !== 0;
+  }
 
   /* ───────── 메뉴 화면 ───────── */
   function renderPlace() {
@@ -1085,8 +1248,8 @@ h1, h2, h3 { font-family: var(--font-display); font-weight: 400; margin: 0; text
     var total = cartTotal(), count = cartCount();
     var html = state.cart.length ? state.cart.map(lineHtml).join("") : EMPTY;
     $("#tray-list").innerHTML = html;
-    $("#tray-total").textContent = won(total);
-    $("#bar-total").textContent = won(total);
+    $("#tray-total").textContent = study() && total ? "?원" : won(total);
+    $("#bar-total").textContent = study() && total ? "?원" : won(total);
     $("#bar-count").textContent = count;
     $("#btn-order").disabled = $("#btn-order-bar").disabled = $("#btn-clear").disabled = !count;
     if (bump) { var bc = $("#bar-count"); bc.classList.remove("bump"); void bc.offsetWidth; bc.classList.add("bump"); }
@@ -1094,8 +1257,7 @@ h1, h2, h3 { font-family: var(--font-display); font-weight: 400; margin: 0; text
     $("#confirm-list").innerHTML = html;
     $("#confirm-total").textContent = won(total);
     $("#confirm-read").textContent = "(" + readKo(total) + ")";
-    $("#pay-buttons").hidden = total === 0;
-    $("#free-buttons").hidden = total !== 0;
+    renderConfirmMath();
   }
   function onStep(e) {
     var b = e.target.closest("[data-line]"); if (!b) return;
@@ -1120,7 +1282,8 @@ h1, h2, h3 { font-family: var(--font-display); font-weight: 400; margin: 0; text
   function goConfirm() {
     if (!state.cart.length) return;
     renderPlace(); renderCart(); show("s-confirm");
-    speak("주문하신 음식을 확인해 주세요. 모두 " + readKo(cartTotal()) + "입니다.");
+    if (study() && cartTotal() > 0) speak("주문한 음식 값을 모두 더하면 얼마일까요? 계산해서 써 보세요.");
+    else speak("주문하신 음식을 확인해 주세요. 모두 " + readKo(cartTotal()) + "입니다.");
   }
   $("#btn-order").addEventListener("click", goConfirm);
   $("#btn-order-bar").addEventListener("click", goConfirm);
@@ -1141,7 +1304,7 @@ h1, h2, h3 { font-family: var(--font-display); font-weight: 400; margin: 0; text
     $("#term-screen").innerHTML = '<span class="num">' + won(cartTotal()) + "</span>";
     $$(".term-lights i").forEach(function (i) { i.classList.remove("on"); });
   }
-  $("#btn-pay-card").addEventListener("click", function () { resetCard(); show("s-card"); speak("카드를 꽂아 주세요."); });
+  $("#btn-pay-card").addEventListener("click", function () { delete state.quizLog.sub; resetCard(); show("s-card"); speak("카드를 꽂아 주세요."); });
   $("#btn-card-cancel").addEventListener("click", function () { resetCard(); show("s-confirm"); });
   $("#card").addEventListener("click", function () {
     if (cardBusy) return; cardBusy = true;
@@ -1172,24 +1335,44 @@ h1, h2, h3 { font-family: var(--font-display); font-weight: 400; margin: 0; text
     $("#cash-pile").innerHTML = MONEY.filter(function (m) { return counts[m]; }).map(function (m) {
       return '<span class="chip num">' + won(m) + " × " + counts[m] + "</span>";
     }).join("");
-    var enough = paid >= total;
+    var enough = paid >= total, st = study();
+    // 공부 모드: 돈을 다 내면 지폐·동전 대신 거스름돈 빼기 문제가 나옴
+    var quizOn = st && paid > total;
+    $(".money").hidden = st && enough;
+    $("#quiz-sub").hidden = !quizOn;
+    if (!quizOn) state.subFor = null;
+    else if (state.subFor !== paid) {
+      state.subFor = paid; state.subSolved = false;
+      makeQuiz($("#quiz-sub"), {
+        title: "거스름돈은 얼마일까요?", sub: "받은 돈에서 주문 금액을 빼 보세요",
+        expr: fmt(paid) + " − " + fmt(total), answer: paid - total,
+        onSolved: function (r) { state.subSolved = true; state.quizLog.sub = r; renderCash(); }
+      });
+      speak("이제 거스름돈을 계산해 보세요.");
+    }
+    var showChange = enough && (!st || paid === total || state.subSolved);
+    $("#cash-need-label").textContent = st ? "아직 모자라요" : "더 내야 해요";
+    $("#cash-need").hidden = st;
     $("#cash-need-row").hidden = enough;
-    $("#cash-change-row").hidden = !enough;
+    $("#cash-change-row").hidden = !showChange;
     $("#cash-need").textContent = won(Math.max(0, total - paid));
     $("#cash-change").textContent = won(Math.max(0, paid - total));
     var box = $("#change-box");
-    if (enough && paid > total) {
+    if (showChange && paid > total) {
       box.hidden = false;
       box.innerHTML = "<b>거스름돈 주는 법</b><br>" + breakDown(paid - total).map(function (p) {
         return won(p[0]) + (p[0] >= 1000 ? " 지폐 " : " 동전 ") + p[1] + (p[0] >= 1000 ? "장" : "개");
       }).join(", ");
     } else box.hidden = true;
-    $("#cash-hint").textContent = !paid ? "돈을 눌러서 내 보세요!" : enough ? (paid === total ? "딱 맞게 냈어요! 👏" : "거스름돈을 받아 가세요!") : "조금 더 내야 해요.";
-    $("#btn-cash-done").disabled = !enough;
+    $("#cash-hint").textContent = !paid ? "돈을 눌러서 내 보세요!"
+      : !enough ? (st ? "아직 모자라요. 돈을 더 내 주세요." : "조금 더 내야 해요.")
+      : paid === total ? "딱 맞게 냈어요! 거스름돈이 없어요 👏"
+      : showChange ? "거스름돈을 받아 가세요!" : "거스름돈을 계산해 보세요 ✏️ 돈을 다시 내려면 '다시 세기'를 눌러요.";
+    $("#btn-cash-done").disabled = !showChange;
   }
-  $("#btn-pay-cash").addEventListener("click", function () { state.cash = []; renderCash(); show("s-cash"); speak("돈을 내 주세요."); });
+  $("#btn-pay-cash").addEventListener("click", function () { state.cash = []; state.subFor = null; delete state.quizLog.sub; renderCash(); show("s-cash"); speak("돈을 내 주세요."); });
   $("#btn-cash-cancel").addEventListener("click", function () { state.cash = []; show("s-confirm"); });
-  $("#btn-cash-reset").addEventListener("click", function () { state.cash = []; renderCash(); });
+  $("#btn-cash-reset").addEventListener("click", function () { state.cash = []; state.subFor = null; delete state.quizLog.sub; renderCash(); });
   $$("[data-money]").forEach(function (b) {
     b.addEventListener("click", function () {
       if (state.cash.length >= 60) return;
@@ -1199,7 +1382,7 @@ h1, h2, h3 { font-family: var(--font-display); font-weight: 400; margin: 0; text
   $("#btn-cash-done").addEventListener("click", function () {
     var total = cartTotal();
     var paid = state.cash.reduce(function (s, m) { return s + m; }, 0);
-    if (paid < total) return;
+    if (paid < total || (study() && paid > total && !state.subSolved)) return;
     finish("cash", paid, paid - total);
   });
   $("#btn-pay-free").addEventListener("click", function () { finish("free", 0, 0); });
@@ -1213,8 +1396,15 @@ h1, h2, h3 { font-family: var(--font-display); font-weight: 400; margin: 0; text
       items: state.cart.map(function (l) { return { name: l.name, emoji: l.emoji, opts: l.opts, qty: l.qty, unit: l.unit }; }),
       total: cartTotal(),
       pay: pay, paid: paid, change: change,
-      status: "cooking"
+      status: "cooking",
+      study: study() ? state.quizLog : null
     };
+    ["add", "sub"].forEach(function (k) {
+      var q = order.study && order.study[k];
+      if (!q) return;
+      store.quiz.total++;
+      if (q.tries === 1 && !q.revealed) store.quiz.firstTry++;
+    });
     store.orders.unshift(order);
     if (store.orders.length > 200) store.orders.length = 200;
     store.nextNo = store.nextNo >= 999 ? 1 : store.nextNo + 1;
@@ -1235,6 +1425,15 @@ h1, h2, h3 { font-family: var(--font-display); font-weight: 400; margin: 0; text
     var f = $("#fortune");
     f.hidden = !hasFortune;
     if (hasFortune) f.textContent = "🥠 오늘의 운세: " + FORTUNES[Math.floor(Math.random() * FORTUNES.length)];
+
+    var sr = $("#study-result"), log = order.study || {};
+    function stars(q) {
+      return q.revealed ? "💪 다음엔 꼭 맞혀 봐요" : q.tries === 1 ? "⭐⭐⭐ 한 번에 맞혔어요!" : q.tries === 2 ? "⭐⭐ 두 번 만에 맞혔어요!" : "⭐ " + q.tries + "번 만에 맞혔어요!";
+    }
+    sr.hidden = !(log.add || log.sub);
+    sr.innerHTML = "<b>✏️ 오늘의 계산 공부</b>" +
+      (log.add ? "<span>➕ 더하기 (합계): " + stars(log.add) + "</span>" : "") +
+      (log.sub ? "<span>➖ 빼기 (거스름돈): " + stars(log.sub) + "</span>" : "");
 
     state.cart = []; state.cash = [];
     renderCart();
@@ -1269,7 +1468,7 @@ h1, h2, h3 { font-family: var(--font-display); font-weight: 400; margin: 0; text
       var payName = { card: "카드", cash: "현금", free: "무료" }[o.pay];
       return '<article class="ticket' + (o.status === "done" ? " done" : "") + '">' +
         '<div class="ticket-head"><span class="no num">' + o.no + '번</span><span class="meta">' + hhmm(o.time) + "<br>" +
-        (o.place === "in" ? "🍽️ 매장" : "🛍️ 포장") + " · " + payName + "</span></div>" +
+        (o.place === "in" ? "🍽️ 매장" : "🛍️ 포장") + " · " + payName + (o.study ? " · ✏️공부" : "") + "</span></div>" +
         "<ul>" + o.items.map(function (it) {
           return "<li>" + it.emoji + " <b>" + it.name + "</b> × " + it.qty + (it.opts ? "<small>" + it.opts + "</small>" : "") + "</li>";
         }).join("") + "</ul>" +
@@ -1283,7 +1482,8 @@ h1, h2, h3 { font-family: var(--font-display); font-weight: 400; margin: 0; text
       '<div class="k-stats">' +
       '<div class="k-stat"><b class="num">' + cooking.length + "</b><span>요리할 주문</span></div>" +
       '<div class="k-stat"><b class="num">' + store.orders.filter(function (o) { return o.status === "done"; }).length + "</b><span>나간 주문</span></div>" +
-      '<div class="k-stat"><b class="num">' + won(sales) + "</b><span>번 돈</span></div></div>" +
+      '<div class="k-stat"><b class="num">' + won(sales) + "</b><span>번 돈</span></div>" +
+      '<div class="k-stat"><b class="num">' + store.quiz.firstTry + " / " + store.quiz.total + "</b><span>✏️ 한 번에 맞힌 계산 문제</span></div></div>" +
       (cooking.length ? '<div class="k-section"><h3>🔥 요리할 주문</h3><div class="tickets">' + cooking.map(ticket).join("") + "</div></div>"
         : '<div class="k-empty"><span class="big" aria-hidden="true">🧑‍🍳</span>들어온 주문이 없어요. 손님을 기다려요!</div>') +
       (done.length ? '<div class="k-section"><h3>✅ 나간 주문</h3><div class="tickets">' + done.map(ticket).join("") + "</div></div>" : "");
@@ -1338,7 +1538,7 @@ h1, h2, h3 { font-family: var(--font-display); font-weight: 400; margin: 0; text
     });
   }
   armed($("#btn-reset-no"), "1번부터 다시 시작", function () { store.nextNo = 1; save(); renderKitchen(); toast("다음 주문은 1번이에요"); });
-  armed($("#btn-wipe"), "주문 기록 모두 지우기", function () { store.orders = []; store.nextNo = 1; save(); renderKitchen(); toast("주문 기록을 지웠어요"); });
+  armed($("#btn-wipe"), "주문 기록 모두 지우기", function () { store.orders = []; store.nextNo = 1; store.quiz = { total: 0, firstTry: 0 }; save(); renderKitchen(); toast("주문 기록을 지웠어요"); });
   $("#btn-kitchen-exit").addEventListener("click", function () { show("s-start"); });
 
   // 다른 탭에서 주문이 들어오면 주방 화면 갱신
@@ -1353,6 +1553,7 @@ h1, h2, h3 { font-family: var(--font-display); font-weight: 400; margin: 0; text
   if (window.speechSynthesis) try { speechSynthesis.getVoices(); } catch (e) {}
   applyName();
   renderSoundBtn();
+  renderMode();
   renderTabs();
   renderGrid();
   renderCart();
