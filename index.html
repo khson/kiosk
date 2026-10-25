@@ -701,7 +701,10 @@ h1, h2, h3 { font-family: var(--font-display); font-weight: 400; margin: 0; text
     ice:     { name: "얼음",   choices: [["얼음 많이", 0], ["얼음 조금", 0], ["얼음 빼고", 0]] },
     flavor:  { name: "맛",     choices: [["바닐라", 0], ["초코", 0], ["딸기", 0]] },
     bingsu:  { name: "맛",     choices: [["팥", 0], ["딸기", 0], ["망고", 1000]] },
-    hotcold: { name: "온도",   choices: [["따뜻하게", 0], ["시원하게", 0]] }
+    hotcold: { name: "온도",   choices: [["따뜻하게", 0], ["시원하게", 0]] },
+    // multi: 여러 개 고를 수 있음 / showTotal: 보기마다 최종 가격을 보여 줌
+    topping: { name: "추가", title: "더 넣고 싶은 것 (여러 개 골라도 돼요)", multi: true, choices: [["떡", 500], ["계란", 500], ["치즈", 500]] },
+    gimbap:  { name: "김밥 종류", showTotal: true, choices: [["기본김밥", 0], ["꼬마김밥", -1000], ["참치김밥", 1000], ["참치꼬마김밥", 0], ["멸추김밥", 1000], ["돈까스김밥", 1500], ["김치김밥", 500]] }
   };
 
   var MENU = [
@@ -734,9 +737,9 @@ h1, h2, h3 { font-family: var(--font-display); font-weight: 400; margin: 0; text
     { id: "fries",     cat: "western", name: "감자튀김", emoji: "🍟", price: 3000,  desc: "케첩에 콕 찍어 먹어요." },
 
     { id: "tteokbokki", cat: "snack", name: "떡볶이",   emoji: "🍢", price: 5000, desc: "쫄깃한 떡에 달콤 매콤한 소스!", tags: ["인기"], opts: ["spicy"] },
-    { id: "gimbap",     cat: "snack", name: "김밥",     emoji: "🌯", price: 4000, desc: "소풍 갈 때 먹는 돌돌 김밥이에요." },
+    { id: "gimbap",     cat: "snack", name: "김밥",     emoji: "🌯", price: 4000, desc: "소풍 갈 때 먹는 돌돌 김밥이에요. 종류를 골라 보세요!", opts: ["gimbap"] },
     { id: "hotdog",     cat: "snack", name: "핫도그",   emoji: "🌭", price: 3000, desc: "설탕 솔솔, 케첩 쭉!" },
-    { id: "ramyeon",    cat: "snack", name: "라면",     emoji: "🍜", price: 4000, desc: "꼬불꼬불 라면이에요.", opts: ["spicy"] },
+    { id: "ramyeon",    cat: "snack", name: "라면",     emoji: "🍜", price: 4000, desc: "꼬불꼬불 라면이에요. 떡, 계란, 치즈를 넣을 수 있어요!", opts: ["spicy", "topping"] },
     { id: "bibimmyeon", cat: "snack", name: "비빔면",   emoji: "🥢", price: 4000, desc: "새콤달콤 매콤한 소스에 비벼 먹는 시원한 면이에요.", tags: ["새 메뉴"], opts: ["spicy"] },
     { id: "jjapaghetti", cat: "snack", name: "짜파게티", emoji: "🍝", price: 4000, desc: "짜장 소스에 쓱쓱 비벼 먹는 라면이에요.", tags: ["새 메뉴"], opts: ["big"] },
     { id: "matang",     cat: "snack", name: "고구마맛탕", emoji: "🍠", price: 4000, desc: "달콤한 시럽을 입힌 고구마예요." },
@@ -990,13 +993,17 @@ h1, h2, h3 { font-family: var(--font-display); font-weight: 400; margin: 0; text
   /* 메뉴 고르기 창 */
   function sheetUnit() {
     var s = state.sheet, add = 0;
-    (s.item.opts || []).forEach(function (k) { add += OPTS[k].choices[s.sel[k]][1]; });
+    (s.item.opts || []).forEach(function (k) {
+      var g = OPTS[k];
+      if (g.multi) s.sel[k].forEach(function (i) { add += g.choices[i][1]; });
+      else add += g.choices[s.sel[k]][1];
+    });
     return s.item.price + add;
   }
   function openSheet(id) {
     var m = byId(id);
     var sel = {};
-    (m.opts || []).forEach(function (k) { sel[k] = k === "spicy" ? 1 : 0; });
+    (m.opts || []).forEach(function (k) { sel[k] = OPTS[k].multi ? [] : k === "spicy" ? 1 : 0; });
     state.sheet = { item: m, sel: sel, qty: 1 };
     renderSheet();
     $("#sheet-backdrop").hidden = false;
@@ -1008,10 +1015,12 @@ h1, h2, h3 { font-family: var(--font-display); font-weight: 400; margin: 0; text
     var s = state.sheet, m = s.item, c = catOf(m.cat);
     var groups = (m.opts || []).map(function (k) {
       var g = OPTS[k];
-      return '<div class="opt-group"><h4>' + g.name + ' 고르기</h4><div class="opt-choices">' +
+      return '<div class="opt-group"><h4>' + (g.title || g.name + " 고르기") + '</h4><div class="opt-choices">' +
         g.choices.map(function (ch, i) {
-          return '<button class="opt" type="button" data-g="' + k + '" data-i="' + i + '" aria-pressed="' + (s.sel[k] === i) + '">' + ch[0] +
-            (ch[1] ? "<small>+" + won(ch[1]) + "</small>" : "") + "</button>";
+          var on = g.multi ? s.sel[k].indexOf(i) !== -1 : s.sel[k] === i;
+          var price = g.showTotal ? won(m.price + ch[1]) : ch[1] > 0 ? "+" + won(ch[1]) : ch[1] < 0 ? "−" + won(-ch[1]) : "";
+          return '<button class="opt" type="button" data-g="' + k + '" data-i="' + i + '" aria-pressed="' + on + '">' + (g.multi ? (on ? "✔ " : "＋ ") : "") + ch[0] +
+            (price ? '<small class="num">' + price + "</small>" : "") + "</button>";
         }).join("") + "</div></div>";
     }).join("");
     var unit = sheetUnit();
@@ -1026,7 +1035,15 @@ h1, h2, h3 { font-family: var(--font-display); font-weight: 400; margin: 0; text
   $("#sheet").addEventListener("click", function (e) {
     var s = state.sheet; if (!s) return;
     var t = e.target.closest("button"); if (!t) return;
-    if (t.dataset.g) { s.sel[t.dataset.g] = +t.dataset.i; renderSheet(); }
+    if (t.dataset.g) {
+      var k = t.dataset.g, i = +t.dataset.i;
+      if (OPTS[k].multi) {
+        var at = s.sel[k].indexOf(i);
+        if (at === -1) s.sel[k].push(i); else s.sel[k].splice(at, 1);
+        s.sel[k].sort();
+      } else s.sel[k] = i;
+      renderSheet();
+    }
     else if (t.dataset.q) { s.qty = Math.max(1, Math.min(9, s.qty + +t.dataset.q)); renderSheet(); }
     else if (t.hasAttribute("data-close")) closeSheet();
     else if (t.hasAttribute("data-add")) addToCart();
@@ -1036,7 +1053,12 @@ h1, h2, h3 { font-family: var(--font-display); font-weight: 400; margin: 0; text
 
   function addToCart() {
     var s = state.sheet, m = s.item;
-    var labels = (m.opts || []).map(function (k) { return OPTS[k].choices[s.sel[k]][0]; });
+    var labels = [];
+    (m.opts || []).forEach(function (k) {
+      var g = OPTS[k];
+      if (!g.multi) labels.push(g.choices[s.sel[k]][0]);
+      else if (s.sel[k].length) labels.push(s.sel[k].map(function (i) { return g.choices[i][0]; }).join("+") + " 추가");
+    });
     var key = m.id + "|" + labels.join("|");
     var unit = sheetUnit();
     var line = state.cart.filter(function (l) { return l.key === key; })[0];
