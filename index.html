@@ -755,7 +755,9 @@ h1, h2, h3 { font-family: var(--font-display); font-weight: 400; margin: 0; text
     bingsu:  { name: "맛",     choices: [["팥", 0], ["딸기", 0], ["망고", 1000]] },
     hotcold: { name: "온도",   choices: [["따뜻하게", 0], ["시원하게", 0]] },
     // multi: 여러 개 고를 수 있음 / showTotal: 보기마다 최종 가격을 보여 줌
-    topping: { name: "추가", title: "더 넣고 싶은 것 (여러 개 골라도 돼요)", multi: true, choices: [["떡", 500], ["계란", 500], ["치즈", 500]] },
+    // 토핑 가격은 100원 단위 덧셈 연습이 되도록 서로 다르게
+    topping:  { name: "추가", title: "더 넣고 싶은 것 (여러 개 골라도 돼요)", multi: true, choices: [["떡", 300], ["계란", 500], ["치즈", 600], ["만두", 800]] },
+    ttopping: { name: "추가", title: "더 넣고 싶은 것 (여러 개 골라도 돼요)", multi: true, choices: [["사리", 700], ["치즈", 600], ["만두", 800]] },
     gimbap:  { name: "김밥 종류", showTotal: true, choices: [["기본김밥", 0], ["꼬마김밥", -1000], ["참치김밥", 1000], ["참치꼬마김밥", 0], ["멸추김밥", 1000], ["돈까스김밥", 1500], ["김치김밥", 500]] }
   };
 
@@ -788,10 +790,10 @@ h1, h2, h3 { font-family: var(--font-display); font-weight: 400; margin: 0; text
     { id: "salad",     cat: "western", name: "샐러드",   emoji: "🥗", price: 6000,  desc: "아삭아삭 신선한 채소예요." },
     { id: "fries",     cat: "western", name: "감자튀김", emoji: "🍟", price: 3000,  desc: "케첩에 콕 찍어 먹어요." },
 
-    { id: "tteokbokki", cat: "snack", name: "떡볶이",   emoji: "🍢", price: 5000, desc: "쫄깃한 떡에 달콤 매콤한 소스!", tags: ["인기"], opts: ["spicy"] },
+    { id: "tteokbokki", cat: "snack", name: "떡볶이",   emoji: "🍢", price: 5000, desc: "쫄깃한 떡에 달콤 매콤한 소스! 사리, 치즈, 만두를 넣을 수 있어요!", tags: ["인기"], opts: ["spicy", "ttopping"] },
     { id: "gimbap",     cat: "snack", name: "김밥",     emoji: "🌯", price: 4000, desc: "소풍 갈 때 먹는 돌돌 김밥이에요. 종류를 골라 보세요!", opts: ["gimbap"] },
     { id: "hotdog",     cat: "snack", name: "핫도그",   emoji: "🌭", price: 3000, desc: "설탕 솔솔, 케첩 쭉!" },
-    { id: "ramyeon",    cat: "snack", name: "라면",     emoji: "🍜", price: 4000, desc: "꼬불꼬불 라면이에요. 떡, 계란, 치즈를 넣을 수 있어요!", opts: ["spicy", "topping"] },
+    { id: "ramyeon",    cat: "snack", name: "라면",     emoji: "🍜", price: 4000, desc: "꼬불꼬불 라면이에요. 떡, 계란, 치즈, 만두를 넣을 수 있어요!", opts: ["spicy", "topping"] },
     { id: "bibimmyeon", cat: "snack", name: "비빔면",   emoji: "🥢", price: 4000, desc: "새콤달콤 매콤한 소스에 비벼 먹는 시원한 면이에요.", tags: ["새 메뉴"], opts: ["spicy"] },
     { id: "jjapaghetti", cat: "snack", name: "짜파게티", emoji: "🍝", price: 4000, desc: "짜장 소스에 쓱쓱 비벼 먹는 라면이에요.", tags: ["새 메뉴"], opts: ["big"] },
     { id: "matang",     cat: "snack", name: "고구마맛탕", emoji: "🍠", price: 4000, desc: "달콤한 시럽을 입힌 고구마예요." },
@@ -802,7 +804,7 @@ h1, h2, h3 { font-family: var(--font-display); font-weight: 400; margin: 0; text
     { id: "bubbletea", cat: "drink", name: "버블티",     emoji: "🧋", price: 4000, desc: "쫀득한 펄이 들어 있어요.", opts: ["size", "ice"] },
     { id: "lemonade",  cat: "drink", name: "레모네이드", emoji: "🍋", price: 3500, desc: "상큼한 레몬 음료예요.", opts: ["size", "ice"] },
     { id: "choco",     cat: "drink", name: "초코우유",   emoji: "🍫", price: 3000, desc: "달콤한 초콜릿 우유예요.", opts: ["hotcold"] },
-    { id: "water",     cat: "drink", name: "물",         emoji: "💧", price: 0,    desc: "시원한 물은 공짜예요!", tags: ["무료"] },
+    { id: "water",     cat: "drink", name: "물",         emoji: "💧", price: 0,    desc: "시원한 물 1개는 공짜! 2개부터는 1개에 600원이에요.", tags: ["2개부터 600원"], extra: { from: 2, price: 600 } },
 
     { id: "icecream",  cat: "dessert", name: "아이스크림", emoji: "🍦", price: 3000, desc: "녹기 전에 얼른 먹어요!", tags: ["인기"], opts: ["flavor"] },
     { id: "bingsu",    cat: "dessert", name: "빙수",       emoji: "🍧", price: 7000, desc: "곱게 간 얼음 위에 맛있는 토핑!", opts: ["bingsu"] },
@@ -856,7 +858,12 @@ h1, h2, h3 { font-family: var(--font-display); font-weight: 400; margin: 0; text
   function byId(id) { for (var i = 0; i < MENU.length; i++) if (MENU[i].id === id) return MENU[i]; return null; }
   function catOf(id) { for (var i = 0; i < CATS.length; i++) if (CATS[i].id === id) return CATS[i]; return CATS[0]; }
   function isSold(id) { return store.soldOut.indexOf(id) !== -1; }
-  function cartTotal() { return state.cart.reduce(function (s, l) { return s + l.unit * l.qty; }, 0); }
+  // 한 줄 금액 = 1개 값 × 개수 + (extra가 있으면 from번째 개부터 1개마다 추가 금액)
+  function lineTotal(l) {
+    var extra = l.extraPrice ? Math.max(0, l.qty - l.extraFrom + 1) * l.extraPrice : 0;
+    return l.unit * l.qty + extra;
+  }
+  function cartTotal() { return state.cart.reduce(function (s, l) { return s + lineTotal(l); }, 0); }
   function cartCount() { return state.cart.reduce(function (s, l) { return s + l.qty; }, 0); }
 
   // 금액을 한글로 읽기: 21000 → "이만 천 원"
@@ -1090,11 +1097,16 @@ h1, h2, h3 { font-family: var(--font-display); font-weight: 400; margin: 0; text
     if (k) { e.preventDefault(); root._quiz.press(k); }
   });
 
-  // 더하기 식: 같은 메뉴 여러 개는 풀어서 더하고, 너무 길면 줄마다 합친 금액으로
+  // 더하기 식: 같은 메뉴 여러 개는 풀어서, 토핑은 따로 더하고, 너무 길면 줄마다 합친 금액으로
   function addTerms() {
-    var lines = state.cart.filter(function (l) { return l.unit > 0; }), terms = [];
-    lines.forEach(function (l) { for (var i = 0; i < l.qty; i++) terms.push(l.unit); });
-    if (terms.length > 6) terms = lines.map(function (l) { return l.unit * l.qty; });
+    var lines = state.cart.filter(function (l) { return lineTotal(l) > 0; }), terms = [];
+    lines.forEach(function (l) {
+      for (var i = 1; i <= l.qty; i++) {
+        (l.parts || [l.unit]).forEach(function (n) { if (n) terms.push(n); });
+        if (l.extraPrice && i >= l.extraFrom) terms.push(l.extraPrice);
+      }
+    });
+    if (terms.length > 8) terms = lines.map(lineTotal);
     return terms;
   }
   // 좁은 화면(폰)에서는 문제·버튼이 화면 아래쪽에 다 보이도록 스크롤해 줌
@@ -1164,7 +1176,7 @@ h1, h2, h3 { font-family: var(--font-display); font-weight: 400; margin: 0; text
         '<span class="tags">' + tags + "</span>" +
         '<span class="bubble" aria-hidden="true">' + m.emoji + "</span>" +
         '<span class="name">' + m.name + "</span>" +
-        '<span class="price num">' + (m.price ? wonHtml(m.price) : "무료!") + "</span>" +
+        '<span class="price num">' + (m.price ? wonHtml(m.price) : m.extra ? "1개 무료!" : "무료!") + "</span>" +
         (sold ? '<span class="stamp"><span>품절</span></span>' : "") +
         "</button>";
     }).join("");
@@ -1195,6 +1207,25 @@ h1, h2, h3 { font-family: var(--font-display); font-weight: 400; margin: 0; text
     if (first) first.focus({ preventScroll: true });
   }
   function closeSheet() { $("#sheet-backdrop").hidden = true; state.sheet = null; }
+  // 지금 고른 옵션으로 장바구니에 담길 줄 (parts: 공부 모드 덧셈 식에 쓰는 금액 조각)
+  function sheetLine() {
+    var s = state.sheet, m = s.item, labels = [], base = m.price, tops = [];
+    (m.opts || []).forEach(function (k) {
+      var g = OPTS[k];
+      if (!g.multi) { labels.push(g.choices[s.sel[k]][0]); base += g.choices[s.sel[k]][1]; }
+      else if (s.sel[k].length) {
+        labels.push(s.sel[k].map(function (i) { tops.push(g.choices[i][1]); return g.choices[i][0] + " +" + won(g.choices[i][1]); }).join(", "));
+      }
+    });
+    var key = m.id + "|" + labels.join("|");
+    if (m.extra) labels.push("1개 무료, " + m.extra.from + "개부터 1개 " + won(m.extra.price));
+    return {
+      key: key, id: m.id, name: m.name, emoji: m.emoji, opts: labels.join(" · "),
+      unit: sheetUnit(), parts: [base].concat(tops),
+      extraFrom: m.extra ? m.extra.from : 0, extraPrice: m.extra ? m.extra.price : 0
+    };
+  }
+  function findLine(key) { return state.cart.filter(function (l) { return l.key === key; })[0]; }
   function renderSheet() {
     var s = state.sheet, m = s.item, c = catOf(m.cat);
     var groups = (m.opts || []).map(function (k) {
@@ -1207,14 +1238,17 @@ h1, h2, h3 { font-family: var(--font-display); font-weight: 400; margin: 0; text
             (price ? '<small class="num">' + price + "</small>" : "") + "</button>";
         }).join("") + "</div></div>";
     }).join("");
-    var unit = sheetUnit();
+    // 이미 담긴 같은 메뉴가 있으면 (물처럼 개수에 따라 값이 바뀌는 메뉴) 더 담을 때 늘어나는 금액
+    var nl = sheetLine(), had = findLine(nl.key), before = had ? had.qty : 0;
+    nl.qty = before + s.qty; var addPrice = lineTotal(nl);
+    nl.qty = before; addPrice -= lineTotal(nl);
     $("#sheet").innerHTML =
       '<div class="sheet-hero"><span class="bubble" style="--cat: var(' + c.color + ')" aria-hidden="true">' + m.emoji + "</span>" +
-      '<div><h3 id="sheet-title">' + m.name + '</h3><p>' + m.desc + '</p><div class="price num" style="font-family:var(--font-display);font-size:24px;color:var(--ketchup);margin-top:4px">' + (m.price ? won(m.price) : "무료!") + "</div></div></div>" +
+      '<div><h3 id="sheet-title">' + m.name + '</h3><p>' + m.desc + '</p><div class="price num" style="font-family:var(--font-display);font-size:24px;color:var(--ketchup);margin-top:4px">' + (m.price ? won(m.price) : m.extra ? "1개 무료!" : "무료!") + "</div></div></div>" +
       groups +
       '<div class="qty-row"><h4>몇 개 줄까요?</h4><div class="stepper"><button type="button" data-q="-1" aria-label="하나 빼기">−</button><output class="num" aria-live="polite">' + s.qty + '</output><button type="button" data-q="1" aria-label="하나 더하기">+</button></div></div>' +
       '<div class="sheet-actions"><button class="toy" type="button" data-close>닫기</button>' +
-      '<button class="toy primary" type="button" data-add>담기 · <span class="num">' + won(unit * s.qty) + "</span></button></div>";
+      '<button class="toy primary" type="button" data-add>담기 · <span class="num">' + won(addPrice) + "</span></button></div>";
   }
   $("#sheet").addEventListener("click", function (e) {
     var s = state.sheet; if (!s) return;
@@ -1237,17 +1271,9 @@ h1, h2, h3 { font-family: var(--font-display); font-weight: 400; margin: 0; text
 
   function addToCart() {
     var s = state.sheet, m = s.item;
-    var labels = [];
-    (m.opts || []).forEach(function (k) {
-      var g = OPTS[k];
-      if (!g.multi) labels.push(g.choices[s.sel[k]][0]);
-      else if (s.sel[k].length) labels.push(s.sel[k].map(function (i) { return g.choices[i][0]; }).join("+") + " 추가");
-    });
-    var key = m.id + "|" + labels.join("|");
-    var unit = sheetUnit();
-    var line = state.cart.filter(function (l) { return l.key === key; })[0];
+    var nl = sheetLine(), line = findLine(nl.key);
     if (line) line.qty = Math.min(20, line.qty + s.qty);
-    else state.cart.push({ key: key, id: m.id, name: m.name, emoji: m.emoji, opts: labels.join(" · "), unit: unit, qty: s.qty });
+    else { nl.qty = s.qty; state.cart.push(nl); }
     closeSheet();
     renderCart(true);
     chime();
@@ -1258,7 +1284,7 @@ h1, h2, h3 { font-family: var(--font-display); font-weight: 400; margin: 0; text
     return '<li class="line">' +
       '<span class="l-emoji" aria-hidden="true">' + l.emoji + "</span>" +
       '<span class="l-name">' + l.name + (l.opts ? '<span class="l-opt">' + l.opts + "</span>" : "") + "</span>" +
-      '<span class="l-price num">' + won(l.unit * l.qty) + "</span>" +
+      '<span class="l-price num">' + won(lineTotal(l)) + "</span>" +
       '<span class="stepper"><button type="button" data-line="' + i + '" data-d="-1" aria-label="' + l.name + ' 하나 빼기">' + (l.qty === 1 ? "🗑" : "−") + '</button>' +
       '<output class="num">' + l.qty + '</output><button type="button" data-line="' + i + '" data-d="1" aria-label="' + l.name + ' 하나 더하기">+</button></span>' +
       "</li>";
@@ -1417,7 +1443,7 @@ h1, h2, h3 { font-family: var(--font-display); font-weight: 400; margin: 0; text
       no: store.nextNo,
       time: Date.now(),
       place: state.place,
-      items: state.cart.map(function (l) { return { name: l.name, emoji: l.emoji, opts: l.opts, qty: l.qty, unit: l.unit }; }),
+      items: state.cart.map(function (l) { return { name: l.name, emoji: l.emoji, opts: l.opts, qty: l.qty, unit: l.unit, total: lineTotal(l) }; }),
       total: cartTotal(),
       pay: pay, paid: paid, change: change,
       status: "cooking",
@@ -1440,7 +1466,7 @@ h1, h2, h3 { font-family: var(--font-display); font-weight: 400; margin: 0; text
       '<div class="r-no num">' + order.no + "</div>" +
       '<div class="r-place"><span class="chip mustard">' + (order.place === "in" ? "🍽️ 여기서 먹어요" : "🛍️ 가져갈래요") + '</span> <span class="chip">' + payName + "</span></div>" +
       "<ul>" + order.items.map(function (it) {
-        return "<li><span>" + it.emoji + " " + it.name + " × " + it.qty + "</span><span class=\"num\">" + won(it.unit * it.qty) + "</span></li>";
+        return "<li><span>" + it.emoji + " " + it.name + " × " + it.qty + "</span><span class=\"num\">" + won(it.total != null ? it.total : it.unit * it.qty) + "</span></li>";
       }).join("") + "</ul>" +
       '<div class="r-total"><span>합계</span><span class="num">' + won(order.total) + "</span></div>" +
       (pay === "cash" ? '<div class="r-total" style="font-size:18px;border:0;margin-top:4px;padding-top:0"><span>받은 돈 / 거스름돈</span><span class="num">' + won(paid) + " / " + won(change) + "</span></div>" : "");
